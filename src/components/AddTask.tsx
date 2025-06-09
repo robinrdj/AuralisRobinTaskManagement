@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { addTask } from "../store/taskSlice.tsx";
-import type { AppDispatch } from "../store/store.tsx";
+import { addTask } from "../store/taskSlice";
+import type { AppDispatch } from "../store/store";
 
 type Priority = "low" | "medium" | "high";
 type Status = "todo" | "inprogress" | "review" | "completed";

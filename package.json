@@ -1,18 +1,22 @@
 {
-  "name": "taskmangement",
+  "name": "auralis",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@reduxjs/toolkit": "^2.8.2",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
+    "chart.js": "^4.4.9",
     "react": "^19.1.0",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.2",
     "react-scripts": "5.0.1",
+    "react-window": "^1.8.11",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -40,6 +44,8 @@
     ]
   },
   "devDependencies": {
-    "@types/react": "^19.1.6"
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.6",
+    "typescript": "^5.8.3"
   }
 }
