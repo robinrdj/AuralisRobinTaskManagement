@@ -1,0 +1,44 @@
+.filter-container {
+  margin-bottom: 1.5rem;
+}
+
+.filter-bar {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #007bff;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* responsiveness */
+/* Tablet: 4 per row */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .filter-bar {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Desktop: 8 per row (7 filters + 1 button) */
+@media (min-width: 1024px) {
+  .filter-bar {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}

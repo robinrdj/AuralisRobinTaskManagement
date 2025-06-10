@@ -1,22 +1,25 @@
 import React from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useSelector, useDispatch } from "react-redux";
-import type { AppDispatch } from "../store/store.tsx";
+import type { AppDispatch } from "../store/store";
 import TaskColumn from "./TaskBoardDragComponents/TaskColumn";
 import MultiUpdateModal from "./ModalComponents/MultiUpdateModal";
 import SearchSortBar from "./TaskControlComponents/SearchSortBar";
 import FilterBar from "./TaskControlComponents/FilterBar";
 import SelectionControls from "./TaskControlComponents/SelectionControls";
 import { getAllTasks, updateTask, Task } from "../store/taskSlice";
-
-import useTaskSelection from "../hooks/UseTaskSelection";
-import { useFilters } from "../hooks/UseFiltersHook";
-import { useBoardData } from "../hooks/UseBoardDataHook";
+import EmptyStateMessage from "./MessageComponents/EmptyStateMessage";
+import useTaskSelection from "../customHooks/UseTaskSelectionHook";
+import { useFilters } from "../customHooks/UseFiltersHook";
+import { useBoardData } from "../customHooks/UseBoardDataHook";
+import useDownloadTasks from "../customHooks/UseDownloadTasksHook";
+import "./TaskBoard.css";
 
 const TaskBoard: React.FC = () => {
   const tasks = useSelector(getAllTasks);
   const dispatch = useDispatch<AppDispatch>();
 
+  // setting the value
   const {
     sortBy,
     setSortBy,
@@ -27,8 +30,8 @@ const TaskBoard: React.FC = () => {
     debouncedSearch,
   } = useFilters();
 
+  // using the function logic
   const boardData = useBoardData(tasks, sortBy, debouncedSearch, filters);
-
   const {
     selectionMode,
     selectedIds,
@@ -40,6 +43,7 @@ const TaskBoard: React.FC = () => {
     setSelectionMode,
     setSelectedIds,
   } = useTaskSelection(dispatch);
+  const { downloadJSON, downloadCSV } = useDownloadTasks();
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, draggableId } = result;
@@ -48,6 +52,7 @@ const TaskBoard: React.FC = () => {
     const draggedTask = boardData.tasks[draggableId];
     if (!draggedTask) return;
 
+    // task status should change upon moving between columns
     dispatch(
       updateTask({
         id: draggedTask.id,
@@ -57,74 +62,73 @@ const TaskBoard: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <button
-        onClick={() => {
-          if (filters.showFilters) {
-            setFilters({
-              showFilters: false,
-              statusFilter: "",
-              priorityFilter: "",
-              assigneeFilter: "",
-              dueStartDate: "",
-              dueEndDate: "",
-              createdStartDate: "",
-              createdEndDate: "",
-            });
-          } else {
-            setFilters((prev) => ({ ...prev, showFilters: true }));
-          }
-        }}
-        style={{ marginBottom: "1rem", padding: "0.5rem 1rem" }}
-      >
-        {filters.showFilters ? "Hide Filters" : "FilterOn"}
-      </button>
-
+    <div>
       <SearchSortBar
         searchText={searchText}
         setSearchText={setSearchText}
         sortBy={sortBy}
         setSortBy={setSortBy}
       />
-
-      {filters.showFilters && (
-        <FilterBar
-          filters={filters}
-          setFilters={setFilters}
-          assignees={Array.from(new Set(tasks.map((t) => t.assignee)))}
-        />
-      )}
-
-      <SelectionControls
-        selectionMode={selectionMode}
-        selectedIds={selectedIds}
-        onDelete={handleMultiDelete}
-        onUpdate={() => setShowUpdateModal(true)}
-        onCancel={() => {
-          setSelectionMode(false);
-          setSelectedIds(new Set());
-        }}
-        activateSelection={() => setSelectionMode(true)}
+      <FilterBar
+        filters={filters}
+        setFilters={setFilters}
+        assignees={Array.from(new Set(tasks.map((t) => t.assignee)))}
       />
 
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div style={{ display: "flex", gap: "16px", overflowX: "auto" }}>
-          {Object.entries(boardData.columns).map(([columnId, column]) => {
-            const columnTasks = column.taskIds.map((id) => boardData.tasks[id]);
-            return (
-              <TaskColumn
-                key={columnId}
-                columnId={columnId}
-                column={column}
-                tasks={columnTasks}
-                selectedIds={selectedIds}
-                setSelectedIds={setSelectedIds}
-                selectionMode={selectionMode}
-              />
-            );
-          })}
+      <div className="controls-wrapper">
+        <SelectionControls
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onDelete={handleMultiDelete}
+          onUpdate={() => setShowUpdateModal(true)}
+          onCancel={() => {
+            setSelectionMode(false);
+            setSelectedIds(new Set());
+          }}
+          activateSelection={() => setSelectionMode(true)}
+        />
+        <div className="download-buttons">
+          <button
+            onClick={() => downloadJSON(boardData.tasks)}
+            className="download-json"
+          >
+            ⬇️ Download JSON
+          </button>
+          <button
+            onClick={() => downloadCSV(boardData.tasks)}
+            className="download-csv"
+          >
+            📄 Download CSV
+          </button>
         </div>
-      </DragDropContext>
+      </div>
+
+      {Object.keys(boardData.tasks).length === 0 ? (
+        <EmptyStateMessage />
+      ) : (
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div style={{ display: "flex", gap: "16px", overflowX: "auto" }}>
+            <div className="task-columns-wrapper">
+              {Object.entries(boardData.columns).map(([columnId, column]) => {
+                const columnTasks = column.taskIds.map(
+                  (id) => boardData.tasks[id]
+                );
+                return (
+                  <TaskColumn
+                    key={columnId}
+                    columnId={columnId}
+                    column={column}
+                    tasks={columnTasks}
+                    selectedIds={selectedIds}
+                    setSelectedIds={setSelectedIds}
+                    selectionMode={selectionMode}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </DragDropContext>
+      )}
 
       {showUpdateModal && (
         <MultiUpdateModal

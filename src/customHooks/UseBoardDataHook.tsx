@@ -1,5 +1,5 @@
 import { Task, Status } from "../store/taskSlice";
-
+import { formatToIndianDate, indianToISODate } from "../utils/dateUtils";
 type SortOption = "none" | "due_date" | "priority" | "title" | "created_on";
 
 interface Filters {
@@ -23,7 +23,9 @@ export const useBoardData = (
     switch (sortBy) {
       case "due_date":
         return [...taskList].sort((a, b) =>
-          (a.due_date || "").localeCompare(b.due_date || "")
+          indianToISODate(a.due_date || "").localeCompare(
+            indianToISODate(b.due_date || "")
+          )
         );
       case "priority":
         const priorityOrder = { high: 1, medium: 2, low: 3 };
@@ -55,6 +57,7 @@ export const useBoardData = (
   };
 
   const filteredTasks = tasks.filter((task) => {
+    // atleast one of tast title or description should match
     const matchesSearch =
       task.title.toLowerCase().includes(debouncedSearch) ||
       task.description.toLowerCase().includes(debouncedSearch);
@@ -72,8 +75,9 @@ export const useBoardData = (
       : true;
 
     const matchesDueDate = (() => {
+      // check only if both the dates are given as inputs
       if (!filters.dueStartDate && !filters.dueEndDate) return true;
-      const due = new Date(task.due_date || "").getTime();
+      const due = new Date(indianToISODate(task.due_date || "")).getTime();
       const start = filters.dueStartDate
         ? new Date(filters.dueStartDate).getTime()
         : -Infinity;
@@ -85,7 +89,9 @@ export const useBoardData = (
 
     const matchesCreation = (() => {
       if (!filters.createdStartDate && !filters.createdEndDate) return true;
-      const creation = new Date(task.created_on || "").getTime();
+      const creation = new Date(
+        indianToISODate(task.created_on || "")
+      ).getTime();
       const start = filters.createdStartDate
         ? new Date(filters.createdStartDate).getTime()
         : -Infinity;

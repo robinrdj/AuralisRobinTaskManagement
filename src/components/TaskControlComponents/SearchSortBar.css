@@ -1,0 +1,53 @@
+.search-sort-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-input,
+.sort-select {
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  min-width: 180px;
+  flex: 1;
+}
+
+/* responsiveness */
+/* Desktop: row layout */
+@media (min-width: 1024px) {
+  .search-sort-bar {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+  .search-input,
+  .sort-select {
+    max-width: 300px;
+  }
+}
+
+/* Tablet: stacked vertically */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .search-sort-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .search-input,
+  .sort-select {
+    width: 100%;
+  }
+}
+
+/* Mobile: stacked vertically full width */
+@media (max-width: 767px) {
+  .search-sort-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-input,
+  .sort-select {
+    width: 100%;
+  }
+}

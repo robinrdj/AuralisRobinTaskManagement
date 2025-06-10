@@ -6,7 +6,7 @@ import {
 } from "../store/taskSlice";
 import { AppDispatch } from "../store/store";
 
-const useTaskSelection = (dispatch: AppDispatch) => {
+const useTaskSelectionHook = (dispatch: AppDispatch) => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -28,6 +28,7 @@ const useTaskSelection = (dispatch: AppDispatch) => {
     });
   };
 
+  // handling functions
   const handleMultiDelete = () => {
     dispatch(
       deleteMultipleTasks(Array.from(selectedIds).map((id) => Number(id)))
@@ -61,4 +62,4 @@ const useTaskSelection = (dispatch: AppDispatch) => {
   };
 };
 
-export default useTaskSelection;
+export default useTaskSelectionHook;

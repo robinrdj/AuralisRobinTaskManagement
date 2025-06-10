@@ -1,0 +1,36 @@
+.form-title {
+  color: #007bff;
+  text-align: center;
+}
+.form-input {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #555;
+  background-color: #fff;
+  color: #1e1e1e;
+  width: 100%;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.form-label {
+  color: #007bff;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.submit-button {
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #0056b3;
+}

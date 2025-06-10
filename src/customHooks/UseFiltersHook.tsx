@@ -8,7 +8,7 @@ export const useFilters = () => {
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
 
   const [filters, setFilters] = React.useState({
-    showFilters: true,
+    showFilters: false,
     statusFilter: "",
     priorityFilter: "",
     assigneeFilter: "",

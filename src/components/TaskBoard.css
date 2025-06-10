@@ -1,0 +1,76 @@
+.task-columns-wrapper {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.download-json,
+.download-csv {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  height: 40px;
+  min-width: 140px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 13px;
+  background-color: #007bff;
+}
+.download-csv {
+  background-color: #66bb6a;
+}
+.controls-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 1rem 0 2rem 0;
+}
+
+.download-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* responsiveness */
+@media (max-width: 767px) {
+  .controls-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .download-buttons {
+    justify-content: flex-start;
+  }
+}
+
+/* 1 column on mobile */
+@media (max-width: 767px) {
+  .task-columns-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 2 columns on tablets */
+@media (min-width: 768px) and (max-width: 1349px) {
+  .task-columns-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 4 columns on desktops and up */
+@media (min-width: 1350px) {
+  .task-columns-wrapper {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

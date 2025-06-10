@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addTask } from "../store/taskSlice";
 import type { AppDispatch } from "../store/store";
+import { Container, Row, Col } from "react-grid-system";
+import { useSnackbar } from "notistack";
+
+import "./AddTask.css";
 
 type Priority = "low" | "medium" | "high";
 type Status = "todo" | "inprogress" | "review" | "completed";
@@ -25,9 +29,11 @@ const initialFormState: TaskForm = {
 };
 
 const AddTaskComponent: React.FC = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch<AppDispatch>();
   const [formData, setFormData] = useState<TaskForm>(initialFormState);
 
+  // handling functions
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -43,69 +49,137 @@ const AddTaskComponent: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      alert("Title is required.");
+      enqueueSnackbar("Title is required.", { variant: "warning" });
       return;
     }
-    dispatch(
-      addTask({
-        ...formData,
-        due_date: formData.due_date || null,
-      })
-    );
-    setFormData(initialFormState);
+    try {
+      dispatch(
+        addTask({
+          ...formData,
+          due_date: formData.due_date || null,
+        })
+      );
+      setFormData(initialFormState);
+      enqueueSnackbar("Task added successfully!", { variant: "success" });
+    } catch (error: any) {
+      enqueueSnackbar(
+        error?.message || "Something went wrong while adding the task.",
+        { variant: "error" }
+      );
+    }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{ display: "grid", gap: "10px", maxWidth: "400px" }}
-    >
-      <input
-        type="text"
-        name="title"
-        placeholder="Title"
-        value={formData.title}
-        onChange={handleChange}
-        required
-      />
+    <Container style={{ maxWidth: 600 }}>
+      <h2 className="form-title"> ADD TASK</h2>
+      <form onSubmit={handleSubmit}>
+        <Row gutterWidth={16}>
+          <Col xs={12}>
+            <label className="form-label" htmlFor="title">
+              Title
+            </label>
+            <input
+              id="title"
+              type="text"
+              name="title"
+              placeholder="Title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+              className="form-input"
+              autoComplete="off"
+            />
+          </Col>
 
-      <textarea
-        name="description"
-        placeholder="Description"
-        value={formData.description}
-        onChange={handleChange}
-      />
+          <Col xs={12}>
+            <label className="form-label" htmlFor="description">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              placeholder="Description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={4}
+              className="form-input"
+            />
+          </Col>
 
-      <input
-        type="date"
-        name="due_date"
-        value={formData.due_date}
-        onChange={handleChange}
-      />
+          <Col xs={12} md={6}>
+            <label className="form-label" htmlFor="assignee">
+              Assignee
+            </label>
+            <input
+              id="assignee"
+              type="text"
+              name="assignee"
+              placeholder="Assignee"
+              value={formData.assignee}
+              onChange={handleChange}
+              className="form-input"
+              autoComplete="off"
+            />
+          </Col>
 
-      <select name="status" value={formData.status} onChange={handleChange}>
-        <option value="todo">To Do</option>
-        <option value="inprogress">In Progress</option>
-        <option value="review">Review</option>
-        <option value="completed">Completed</option>
-      </select>
+          <Col xs={12} md={6}>
+            <label className="form-label" htmlFor="due_date">
+              Due Date
+            </label>
+            <input
+              id="due_date"
+              type="date"
+              name="due_date"
+              value={formData.due_date}
+              onChange={handleChange}
+              className="form-input"
+              min={new Date().toLocaleDateString("en-CA")}
+            />
+          </Col>
 
-      <input
-        type="text"
-        name="assignee"
-        placeholder="Assignee"
-        value={formData.assignee}
-        onChange={handleChange}
-      />
+          <Col xs={12} md={6}>
+            <label className="form-label" htmlFor="status">
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="form-input"
+            >
+              <option value="todo">To Do</option>
+              <option value="inprogress">In Progress</option>
+              <option value="review">Review</option>
+              <option value="completed">Completed</option>
+            </select>
+          </Col>
 
-      <select name="priority" value={formData.priority} onChange={handleChange}>
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-      </select>
+          <Col xs={12} md={6}>
+            <label className="form-label" htmlFor="priority">
+              Priority
+            </label>
+            <select
+              id="priority"
+              name="priority"
+              value={formData.priority}
+              onChange={handleChange}
+              className="form-input"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </Col>
 
-      <button type="submit">Add Task</button>
-    </form>
+          <Col xs={12}>
+            <button type="submit" className="submit-button">
+              Add Task
+            </button>
+          </Col>
+        </Row>
+      </form>
+    </Container>
   );
 };
 

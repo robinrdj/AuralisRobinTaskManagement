@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { formatToIndianDate } from "../utils/dateUtils";
 
 export type Priority = "low" | "medium" | "high";
 export type Status = "todo" | "inprogress" | "review" | "completed";
@@ -30,14 +31,20 @@ const taskSlice = createSlice({
       state,
       action: PayloadAction<Omit<Task, "id" | "created_on">>
     ) => {
+      const formattedDueDate = action.payload.due_date
+        ? formatToIndianDate(action.payload.due_date)
+        : null;
+
       const newTask: Task = {
         ...action.payload,
+        due_date: formattedDueDate,
         id: Date.now(),
         created_on: new Date().toISOString(),
         status: action.payload.status || "todo",
         assignee: action.payload.assignee || "",
         priority: action.payload.priority || "low",
       };
+
       state.push(newTask);
       localStorage.setItem("tasks", JSON.stringify(state));
     },
@@ -69,20 +76,45 @@ const taskSlice = createSlice({
       }
     },
 
+    // deleteMultipleTasks: (state, action: PayloadAction<number[]>) => {
+    //   const idsToDelete = new Set(action.payload);
+    //   const newState = state.filter((task) => !idsToDelete.has(task.id));
+    //   localStorage.setItem("tasks", JSON.stringify(newState));
+    //   return newState;
+    // },
     deleteMultipleTasks: (state, action: PayloadAction<number[]>) => {
       const idsToDelete = new Set(action.payload);
-      const newState = state.filter((task) => !idsToDelete.has(task.id));
-      localStorage.setItem("tasks", JSON.stringify(newState));
-      return newState;
+      for (let i = state.length - 1; i >= 0; i--) {
+        if (idsToDelete.has(state[i].id)) {
+          state.splice(i, 1);
+        }
+      }
+      localStorage.setItem("tasks", JSON.stringify(state));
     },
 
-    updateMultipleTasks: (state, action) => {
+    // updateMultipleTasks: (state, action) => {
+    //   const { ids, updates } = action.payload;
+    //   const newState = state.map((task) =>
+    //     ids.includes(task.id) ? { ...task, ...updates } : task
+    //   );
+    //   localStorage.setItem("tasks", JSON.stringify(newState));
+    //   return newState;
+    // },
+
+    updateMultipleTasks: (
+      state,
+      action: PayloadAction<{ ids: number[]; updates: Partial<Task> }>
+    ) => {
       const { ids, updates } = action.payload;
-      const newState = state.map((task) =>
-        ids.includes(task.id) ? { ...task, ...updates } : task
-      );
-      localStorage.setItem("tasks", JSON.stringify(newState));
-      return newState;
+      const idSet = new Set(ids);
+
+      state.forEach((task) => {
+        if (idSet.has(task.id)) {
+          Object.assign(task, updates);
+        }
+      });
+
+      localStorage.setItem("tasks", JSON.stringify(state));
     },
   },
 });

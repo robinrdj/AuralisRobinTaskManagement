@@ -1,4 +1,5 @@
 import React from "react";
+import "./SelectionControls.css";
 
 interface Props {
   selectionMode: boolean;
@@ -17,47 +18,32 @@ const SelectionControls: React.FC<Props> = ({
   onCancel,
   activateSelection,
 }) => {
-  if (!selectionMode) {
-    return (
-      <button
-        onClick={activateSelection}
-        style={{
-          marginBottom: "1rem",
-          padding: "0.5rem 1rem",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer"
-        }}
-      >
-        Enable Multi-Select Mode
-      </button>
-    );
-  }
-
   return (
-    <div
-      className="selection-controls"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        marginBottom: "1rem",
-      }}
-    >
-      <span style={{ fontWeight: "bold" }}>
-        Selected: {selectedIds.size}
-      </span>
-      <button onClick={onUpdate} style={{ backgroundColor: "#ffc107", padding: "0.5rem" }}>
-        Update Selected
-      </button>
-      <button onClick={onDelete} style={{ backgroundColor: "#dc3545", color: "white", padding: "0.5rem" }}>
-        Delete Selected
-      </button>
-      <button onClick={onCancel} style={{ backgroundColor: "#6c757d", color: "white", padding: "0.5rem" }}>
-        Cancel
-      </button>
+    <div className="selection-controls-container">
+      <div className="selection-header">
+        <button
+          className={`toggle-btn ${selectionMode ? "disable" : "enable"}`}
+          onClick={selectionMode ? onCancel : activateSelection}
+        >
+          {selectionMode ? "Disable Multi-Select" : "Enable Multi-Select"}
+        </button>
+        {selectionMode && (
+          <span className="selection-count">
+            Selected: {selectedIds.size} (Ctrl+mouse left click to select)
+          </span>
+        )}
+      </div>
+
+      {selectionMode && (
+        <div className="selection-actions">
+          <button className="action-btn update" onClick={onUpdate}>
+            Update Selected
+          </button>
+          <button className="action-btn delete" onClick={onDelete}>
+            Delete Selected
+          </button>
+        </div>
+      )}
     </div>
   );
 };

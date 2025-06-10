@@ -1,6 +1,7 @@
 import React from "react";
 import { Droppable } from "@hello-pangea/dnd";
 import TaskCard from "./TaskCard";
+import "./TaskColumn.css";
 
 type Priority = "low" | "medium" | "high";
 type Status = "todo" | "inprogress" | "review" | "completed";
@@ -36,7 +37,6 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   selectedIds,
   setSelectedIds,
   selectionMode,
-
 }) => {
   // Helper to toggle task selection
   const toggleSelection = (taskId: string, event: React.MouseEvent) => {
@@ -68,16 +68,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   };
 
   return (
-    <div
-      style={{
-        minWidth: "240px",
-        maxWidth: "260px",
-        width: "100%",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="task-column-container">
       <h3>{column.name}</h3>
       <Droppable droppableId={columnId}>
         {(provided) => (
@@ -101,27 +92,12 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
                 <div
                   key={taskId}
                   onClick={(e) => toggleSelection(taskId, e)}
+                  className="task-card-wrapper"
                   style={{
-                    display: "flex",
-                    alignItems: "center",
                     backgroundColor: isSelected ? "#d0ebff" : "transparent",
-                    borderRadius: "4px",
-                    marginBottom: "4px",
-                    padding: "4px",
-                    cursor: "pointer",
                     userSelect: "none",
                   }}
                 >
-                  {/* <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={(e) => {
-                      // stop event bubbling, handle selection via toggleSelection
-                      e.stopPropagation();
-                      toggleSelection(taskId, e as unknown as React.MouseEvent);
-                    }}
-                    style={{ marginRight: "8px" }}
-                  /> */}
                   <TaskCard task={task} index={index} />
                 </div>
               );

@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { useSelector, useDispatch } from "react-redux";
 import { deleteTask, updateTask } from "../../store/taskSlice";
-import type { RootState } from "../../store/store.ts";
+import type { RootState } from "../../store/store";
+import { formatToIndianDate, indianToISODate } from "../../utils/dateUtils";
+import { FaEdit, FaTrash } from "react-icons/fa";
+import "./TaskCard.css";
+
+const EditIcon = FaEdit as unknown as React.FC;
+const TrashIcon = FaTrash as unknown as React.FC;
 
 type Priority = "low" | "medium" | "high";
 type Status = "todo" | "inprogress" | "review" | "completed";
@@ -22,79 +28,51 @@ interface Task {
   priority: Priority;
 }
 
-const CARD_HEIGHT = "220px";
+const statusColorMap: Record<Status, string> = {
+  todo: "#42a5f5", // yellow-orange
+  inprogress: "#0D47A1", // blue
+  review: "#ab47bc", // purple
+  completed: "#66bb6a", // green
+};
+
+const priorityColorMap: Record<Priority, string> = {
+  low: "#fdd835", // yellow
+  medium: "#fb8c00", // orange
+  high: "#e53935", // red
+};
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState({ ...task });
+  const theme = useSelector((state: RootState) => state.theme);
 
+  // handling functions
   const handleDelete = () => {
     dispatch(deleteTask(task.id));
   };
-
   const handleSave = () => {
     dispatch(updateTask({ ...editedTask, id: task.id }));
     setIsEditing(false);
   };
-  const theme = useSelector((state: RootState) => state.theme);
 
-  const styles: { [key: string]: React.CSSProperties } = {
-    overlay: {
-      position: "fixed",
-      inset: 0,
-      backgroundColor: "rgba(0,0,0,0.4)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: 999,
-    },
-    modal: {
-      backgroundColor: "#fff",
-      padding: "2rem",
-      borderRadius: "8px",
-      display: "grid",
-      gap: "10px",
-      width: "100%",
-      maxWidth: "400px",
-    },
-  };
+  const cardClass = `task-card ${theme === "dark" ? "dark" : "light"}`;
 
+  useEffect(() => {
+    setEditedTask({ ...task });
+  }, [task]);
   return (
     <Draggable draggableId={task.id.toString()} index={index}>
       {(provided) => (
         <div
-          className="task-card"
+          className={cardClass}
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          style={{
-            height: CARD_HEIGHT,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "12px",
-            marginBottom: "8px",
-            background: "#f5f5f5",
-            backgroundColor: theme === "dark" ? "#000" : "#fff",
-            borderRadius: "4px",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
-            overflow: "hidden",
-            ...provided.draggableProps.style,
-            width: "100%",
-            maxWidth: "250px",
-          }}
+          style={provided.draggableProps.style}
         >
           {isEditing ? (
-            <div
-              style={{
-                overflow: "hidden",
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: "4px",
-              }}
-            >
+            <div className="edit-section">
               <input
                 type="text"
                 value={editedTask.title}
@@ -106,18 +84,28 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
               <textarea
                 value={editedTask.description}
                 onChange={(e) =>
-                  setEditedTask({ ...editedTask, description: e.target.value })
+                  setEditedTask({
+                    ...editedTask,
+                    description: e.target.value,
+                  })
                 }
                 placeholder="Description"
-                style={{ resize: "none", height: "60px", overflowY: "auto" }}
               />
               <input
                 type="date"
-                value={editedTask.due_date || ""}
+                value={
+                  editedTask.due_date
+                    ? indianToISODate(editedTask.due_date)
+                    : ""
+                }
                 onChange={(e) =>
-                  setEditedTask({ ...editedTask, due_date: e.target.value })
+                  setEditedTask({
+                    ...editedTask,
+                    due_date: formatToIndianDate(e.target.value),
+                  })
                 }
               />
+
               <input
                 type="text"
                 value={editedTask.assignee}
@@ -139,42 +127,51 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
-              <div style={{ marginTop: "6px", display: "flex", gap: "8px" }}>
+              <div className="button-group">
                 <button onClick={handleSave}>💾 Save</button>
                 <button onClick={() => setIsEditing(false)}>Cancel</button>
               </div>
             </div>
           ) : (
-            <div style={{ overflow: "hidden", flex: 1 }}>
-              <h4 style={{ margin: "0 0 4px 0", wordBreak: "break-word" }}>
-                {task.title}
-              </h4>
-              <p
-                style={{
-                  margin: "0 0 4px 0",
-                  maxHeight: "60px",
-                  overflowY: "auto",
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
-                }}
+            <div className="display-section">
+              <div
+                className="title-box"
+                style={{ backgroundColor: statusColorMap[task.status] }}
               >
-                {task.description}
+                <h3>{task.title}</h3>
+              </div>
+
+              <p>
+                <strong>description:</strong> {task.description}
               </p>
-              <p style={{ margin: 0, fontSize: "0.9em" }}>
-                <strong>Due:</strong> {task.due_date || "None"}
+              <p>
+                <strong>due-date:</strong> {task.due_date || "None"}
               </p>
-              {/* <p style={{ margin: 0 }}>
-                <strong>Status:</strong> {task.status}
-              </p> */}
-              <p style={{ margin: 0 }}>
-                <strong>Priority:</strong> {task.priority}
+              <p>
+                <strong>Priority:</strong>{" "}
+                <span
+                  style={{
+                    color: priorityColorMap[task.priority],
+                    fontWeight: "700",
+                  }}
+                >
+                  {task.priority || "Not set"}
+                </span>
               </p>
-              <p style={{ margin: 0 }}>
-                <strong>Assignee:</strong> {task.assignee}
+
+              <p>
+                <strong>Assignee:</strong> {task.assignee || "Unassigned"}
               </p>
-              <div style={{ marginTop: "6px", display: "flex", gap: "8px" }}>
-                <button onClick={() => setIsEditing(true)}>Edit</button>
-                <button onClick={handleDelete}>Delete</button>
+              <div className="button-group">
+                <button
+                  className="action-btn update"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <EditIcon /> edit
+                </button>
+                <button className="action-btn delete" onClick={handleDelete}>
+                  <TrashIcon /> delete
+                </button>
               </div>
             </div>
           )}

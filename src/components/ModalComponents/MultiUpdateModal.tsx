@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { formatToIndianDate, indianToISODate } from "../../utils/dateUtils";
 
 export type Priority = "low" | "medium" | "high";
 export type Status = "todo" | "inprogress" | "review" | "completed";
@@ -53,38 +54,45 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
     }));
   };
 
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const updates: Partial<Task> = {};
+    const updates: Partial<Task> = {};
 
-  if (formData.title.trim()) {
-    updates.title = formData.title.trim();
-  }
+    if (formData.title.trim()) {
+      updates.title = formData.title.trim();
+    }
 
-  if (formData.description.trim()) {
-    updates.description = formData.description.trim();
-  }
+    if (formData.description.trim()) {
+      updates.description = formData.description.trim();
+    }
 
-  updates.due_date = formData.due_date.trim() || null;
+    updates.due_date = formData.due_date.trim()
+      ? formatToIndianDate(formData.due_date.trim())
+      : null;
 
-  const validStatuses: Status[] = ["todo", "inprogress", "review", "completed"];
-  if (validStatuses.includes(formData.status as Status)) {
-    updates.status = formData.status as Status;
-  }
+    const validStatuses: Status[] = [
+      "todo",
+      "inprogress",
+      "review",
+      "completed",
+    ];
+    if (validStatuses.includes(formData.status as Status)) {
+      updates.status = formData.status as Status;
+    }
 
-  if (formData.assignee.trim()) {
-    updates.assignee = formData.assignee.trim();
-  }
+    if (formData.assignee.trim()) {
+      updates.assignee = formData.assignee.trim();
+    }
 
-  const validPriorities: Priority[] = ["low", "medium", "high"];
-  if (validPriorities.includes(formData.priority as Priority)) {
-    updates.priority = formData.priority as Priority;
-  }
+    const validPriorities: Priority[] = ["low", "medium", "high"];
+    if (validPriorities.includes(formData.priority as Priority)) {
+      updates.priority = formData.priority as Priority;
+    }
 
-  onSubmit(updates);
-  onClose();
-};
+    onSubmit(updates);
+    onClose();
+  };
 
   return (
     <div
@@ -130,7 +138,11 @@ const handleSubmit = (e: React.FormEvent) => {
         <input
           type="date"
           name="due_date"
-          value={formData.due_date}
+          value={
+            /^\d{2}-\d{2}-\d{4}$/.test(formData.due_date)
+              ? indianToISODate(formData.due_date)
+              : formData.due_date
+          }
           onChange={handleChange}
         />
 

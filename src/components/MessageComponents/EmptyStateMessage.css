@@ -1,0 +1,37 @@
+.empty-state-message-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+}
+
+.empty-state-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.empty-state-text {
+  font-size: 16px;
+  color: #222;
+  max-width: 300px;
+}
+
+/* responsiveness */
+@media (max-width: 768px) {
+  .no-tasks-container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .no-tasks-text {
+    max-width: 100%;
+  }
+}
