@@ -1,11 +1,12 @@
 import React, { Suspense, lazy } from "react";
-import { Route, Routes } from "react-router-dom";
+import {Route, Routes } from "react-router-dom";
 import AddTask from "./components/AddTask";
 import TaskBoard from "./components/TaskBoard";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store/store";
 import UploadJson from "./components/UploadJson";
 import { SnackbarProvider } from "notistack";
+import ScrollToTop from "./ScrollToTop";
 import "./App.css";
 
 // Lazy loading  the Analytics component
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   return (
     <div className={`app-container ${theme}`}>
       <SnackbarProvider maxSnack={3} autoHideDuration={6000}>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<AddTask />} />
           <Route path="/taskboard" element={<TaskBoard />} />

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addTask } from "../store/taskSlice";
 import type { AppDispatch, RootState } from "../store/store";
 import { useSnackbar } from "notistack";
+import { motion } from "framer-motion";
 import "./UploadJson.css";
 
 type Status = "todo" | "inprogress" | "review" | "completed";
@@ -130,8 +131,11 @@ const UploadJson: React.FC = () => {
 
   return (
     <div className="upload-json-container">
-      <div
+      <motion.div
         className="upload-pane"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         style={{
           backgroundColor: theme === "dark" ? "gray" : "#f8f9fa",
         }}
@@ -153,10 +157,13 @@ const UploadJson: React.FC = () => {
         <button className="upload-button" onClick={handleUpload}>
           Upload
         </button>
-      </div>
+      </motion.div>
 
-      <div
+      <motion.div
         className="instructions-pane"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
         style={{
           backgroundColor: theme === "dark" ? "gray" : "#f8f9fa",
         }}
@@ -212,7 +219,7 @@ const UploadJson: React.FC = () => {
   }
 ]`}
         </pre>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -68,7 +68,7 @@ const ProductivityMetrics: React.FC = () => {
     labels: weeksToShow.map(formatToIndianDate),
     datasets: [
       {
-        label: "Tasks Completed",
+        label: "Tasks Completed in a week",
         data: weeksToShow.map((week) => weeklyCounts[week] || 0),
         backgroundColor: "#4caf50",
       },

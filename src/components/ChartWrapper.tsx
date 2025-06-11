@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import "./ChartWrapper.css";
 
 interface ChartWrapperProps {
@@ -8,10 +9,14 @@ interface ChartWrapperProps {
 
 const ChartWrapper: React.FC<ChartWrapperProps> = ({ children, title }) => {
   return (
-    <div className="chart-wrapper">
+    <motion.div
+      className="chart-wrapper"
+      whileHover={{ scale: 1.02, boxShadow: "0px 4px 15px rgba(0,0,0,0.1)" }}
+      transition={{ type: "spring", stiffness: 200 }}
+    >
       {title && <h3 className="chart-title">{title}</h3>}
       <div className="chart-content">{children}</div>
-    </div>
+    </motion.div>
   );
 };
 

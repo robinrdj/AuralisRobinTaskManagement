@@ -62,7 +62,7 @@ const TaskCompletionRate: React.FC = () => {
     labels: lastDates,
     datasets: [
       {
-        label: "Tasks Completed in a week",
+        label: "Tasks Completed in a day",
         data: completedCountByDate,
         fill: false,
         borderColor: theme === "dark" ? "#4bc0c0" : "#36a2eb",
@@ -80,7 +80,7 @@ const TaskCompletionRate: React.FC = () => {
       },
       title: {
         display: false,
-        text: "Task Completion Rate (Last 14 Days)",
+        text: "Task Completion Rate",
         color: theme === "dark" ? "#fff" : "#000",
       },
     },
