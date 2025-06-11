@@ -190,7 +190,10 @@ const UploadJson: React.FC = () => {
         <p>Example:</p>
         <pre
           style={{
-            backgroundColor: theme === "dark" ? "darkgray" : "#fff",
+            backgroundColor: theme === "dark" ? "#2d2d2d" : "#fff",
+            color: theme === "dark" ? "#f1f1f1" : "#000",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
           }}
         >
           {`[

@@ -30,9 +30,13 @@
   background: #e9ecef;
   padding: 0.5rem;
   border-radius: 5px;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
   font-size: 0.9rem;
+  max-width: 100%;
+  box-sizing: border-box;
 }
+
 
 .instructions-pane ul {
   margin-left: 1rem;
@@ -42,5 +46,8 @@
 @media (max-width: 768px) {
   .upload-json-container {
     flex-direction: column;
+  }
+  .instructions-pane pre {
+    font-size: 0.85rem;
   }
 }
