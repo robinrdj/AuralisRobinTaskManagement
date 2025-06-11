@@ -4,12 +4,16 @@ import { addTask } from "../store/taskSlice";
 import type { AppDispatch, RootState } from "../store/store";
 import { useSnackbar } from "notistack";
 import { motion } from "framer-motion";
+import { ClipLoader } from "react-spinners";
 import "./UploadJson.css";
 
 type Status = "todo" | "inprogress" | "review" | "completed";
 type Priority = "low" | "medium" | "high";
 
 const UploadJson: React.FC = () => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileName, setFileName] = useState("");
+
   const dispatch = useDispatch<AppDispatch>();
   const theme = useSelector((state: RootState) => state.theme);
   const { enqueueSnackbar } = useSnackbar();
@@ -20,7 +24,7 @@ const UploadJson: React.FC = () => {
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+    setFileName(file.name);
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -60,6 +64,7 @@ const UploadJson: React.FC = () => {
   const resetFileInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
     setParsedTasks(null);
+    setFileName("");
   };
 
   // date format validator
@@ -78,7 +83,7 @@ const UploadJson: React.FC = () => {
       enqueueSnackbar("No valid data to upload.", { variant: "error" });
       return;
     }
-
+    setIsUploading(true);
     let successCount = 0;
     let totalCount = parsedTasks.length;
 
@@ -125,7 +130,7 @@ const UploadJson: React.FC = () => {
         variant: "success",
       });
     }
-
+    setIsUploading(false);
     resetFileInput();
   };
 
@@ -155,8 +160,20 @@ const UploadJson: React.FC = () => {
           style={{ display: "none" }}
         />
         <button className="upload-button" onClick={handleUpload}>
-          Upload
+          {isUploading ? (
+            <>
+              <ClipLoader size={16} color="#36d7b7" />
+              <span style={{ marginLeft: "8px" }}>Uploading...</span>
+            </>
+          ) : (
+            "Upload"
+          )}
         </button>
+        {fileName && (
+          <p style={{ marginTop: "8px" }}>
+            Selected file: <strong>{fileName}</strong>
+          </p>
+        )}
       </motion.div>
 
       <motion.div
@@ -211,10 +228,10 @@ const UploadJson: React.FC = () => {
           {`[
   {
     "title": "Sample Task",
-    "description": "Do something useful",
+    "description": "Complete the sample task with mentioned tools",
     "status": "todo",
     "priority": "medium",
-    "assignee": "John Doe",
+    "assignee": "Robin",
     "due_date": "30-06-2025"
   }
 ]`}

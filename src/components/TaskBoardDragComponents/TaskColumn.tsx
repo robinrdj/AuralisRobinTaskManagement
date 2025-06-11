@@ -36,7 +36,6 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   tasks,
   selectedIds,
   setSelectedIds,
-  selectionMode,
 }) => {
   // Helper to toggle task selection
   const toggleSelection = (taskId: string, event: React.MouseEvent) => {
