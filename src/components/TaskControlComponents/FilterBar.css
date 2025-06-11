@@ -1,5 +1,7 @@
 .filter-container {
   margin-bottom: 1.5rem;
+  padding: 0 1rem;
+  overflow-x: hidden;
 }
 
 .filter-bar {
@@ -38,6 +40,12 @@
 
 /* Tablet: 4 per row */
 @media (min-width: 768px) and (max-width: 1023px) {
+  .filter-group select,
+  .filter-group input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
   .filter-bar {
     grid-template-columns: repeat(4, 1fr);
   }
