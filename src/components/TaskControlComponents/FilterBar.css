@@ -29,6 +29,13 @@
 }
 
 /* responsiveness */
+/* Mobile: 2 per row */
+@media (max-width: 767px) {
+  .filter-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* Tablet: 4 per row */
 @media (min-width: 768px) and (max-width: 1023px) {
   .filter-bar {
@@ -36,7 +43,7 @@
   }
 }
 
-/* Desktop: 8 per row (7 filters + 1 button) */
+/* Desktop: 8 per row */
 @media (min-width: 1024px) {
   .filter-bar {
     grid-template-columns: repeat(8, 1fr);

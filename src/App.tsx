@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import {Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import AddTask from "./components/AddTask";
 import TaskBoard from "./components/TaskBoard";
 import { useSelector } from "react-redux";
@@ -7,6 +7,7 @@ import type { RootState } from "./store/store";
 import UploadJson from "./components/UploadJson";
 import { SnackbarProvider } from "notistack";
 import ScrollToTop from "./ScrollToTop";
+import { ClipLoader } from "react-spinners";
 import "./App.css";
 
 // Lazy loading  the Analytics component
@@ -25,7 +26,14 @@ const App: React.FC = () => {
           <Route
             path="/analytics"
             element={
-              <Suspense fallback={<div>Loading Analytics...</div>}>
+              <Suspense
+                fallback={
+                  <div>
+                    <ClipLoader size={14} color="#36d7b7" />
+                    Loading Analytics...
+                  </div>
+                }
+              >
                 <Analytics />
               </Suspense>
             }

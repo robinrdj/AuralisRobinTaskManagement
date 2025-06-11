@@ -8,7 +8,7 @@ const EmptyStateMessage: React.FC = () => {
   return (
     <div className="empty-state-message-container">
       <img
-        src="/SmilyImg.jpg"
+        src="/smilyImg.jpg"
         alt="Smiley face"
         className="empty-state-image"
       />
