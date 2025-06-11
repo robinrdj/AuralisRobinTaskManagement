@@ -24,7 +24,7 @@ const PriorityDistribution: React.FC = () => {
     labels: ["Low", "Medium", "High"],
     datasets: [
       {
-        label: "Priority Distribution",
+        label: "tasks",
         data: [priorityCounts.low, priorityCounts.medium, priorityCounts.high],
         backgroundColor: ["#ffeb3b", "#ff9800", "#f44336"],
         hoverOffset: 20,

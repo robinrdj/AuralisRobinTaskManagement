@@ -1,13 +1,15 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import AddTask from "./components/AddTask";
 import TaskBoard from "./components/TaskBoard";
-import Analytics from "./components/Analytics";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store/store";
 import UploadJson from "./components/UploadJson";
 import { SnackbarProvider } from "notistack";
 import "./App.css";
+
+// Lazy loading  the Analytics component
+const Analytics = lazy(() => import("./components/Analytics"));
 
 const App: React.FC = () => {
   const theme = useSelector((state: RootState) => state.theme);
@@ -18,7 +20,14 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<AddTask />} />
           <Route path="/taskboard" element={<TaskBoard />} />
-          <Route path="/analytics" element={<Analytics />} />
+          <Route
+            path="/analytics"
+            element={
+              <Suspense fallback={<div>Loading Analytics...</div>}>
+                <Analytics />
+              </Suspense>
+            }
+          />
           <Route path="/uploadJson" element={<UploadJson />} />
         </Routes>
       </SnackbarProvider>

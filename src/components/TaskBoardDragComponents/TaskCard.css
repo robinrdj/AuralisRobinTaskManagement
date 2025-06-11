@@ -17,6 +17,9 @@
   overflow-wrap: break-word;
   white-space: normal;
 }
+/* .task-card:focus {
+  outline: none !important;
+} */
 
 .task-card.light {
   background-color: #fff;

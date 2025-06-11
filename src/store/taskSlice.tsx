@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { formatToIndianDate } from "../utils/dateUtils";
-
 export type Priority = "low" | "medium" | "high";
 export type Status = "todo" | "inprogress" | "review" | "completed";
 
@@ -38,7 +37,7 @@ const taskSlice = createSlice({
       const newTask: Task = {
         ...action.payload,
         due_date: formattedDueDate,
-        id: Date.now(),
+        id:Number(`${Date.now()}${Math.floor(Math.random() * 1000)}`),
         created_on: new Date().toISOString(),
         status: action.payload.status || "todo",
         assignee: action.payload.assignee || "",
@@ -75,13 +74,7 @@ const taskSlice = createSlice({
         localStorage.setItem("tasks", JSON.stringify(state));
       }
     },
-
-    // deleteMultipleTasks: (state, action: PayloadAction<number[]>) => {
-    //   const idsToDelete = new Set(action.payload);
-    //   const newState = state.filter((task) => !idsToDelete.has(task.id));
-    //   localStorage.setItem("tasks", JSON.stringify(newState));
-    //   return newState;
-    // },
+    
     deleteMultipleTasks: (state, action: PayloadAction<number[]>) => {
       const idsToDelete = new Set(action.payload);
       for (let i = state.length - 1; i >= 0; i--) {
@@ -91,15 +84,6 @@ const taskSlice = createSlice({
       }
       localStorage.setItem("tasks", JSON.stringify(state));
     },
-
-    // updateMultipleTasks: (state, action) => {
-    //   const { ids, updates } = action.payload;
-    //   const newState = state.map((task) =>
-    //     ids.includes(task.id) ? { ...task, ...updates } : task
-    //   );
-    //   localStorage.setItem("tasks", JSON.stringify(newState));
-    //   return newState;
-    // },
 
     updateMultipleTasks: (
       state,

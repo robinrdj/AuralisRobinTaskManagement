@@ -1,13 +1,13 @@
-import React from "react";
+import { useState, useEffect } from "react";
 
 type SortOption = "none" | "due_date" | "priority" | "title" | "created_on";
 
 export const useFilters = () => {
-  const [sortBy, setSortBy] = React.useState<SortOption>("none");
-  const [searchText, setSearchText] = React.useState("");
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("none");
+  const [searchText, setSearchText] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const [filters, setFilters] = React.useState({
+  const [filters, setFilters] = useState({
     showFilters: false,
     statusFilter: "",
     priorityFilter: "",
@@ -17,8 +17,7 @@ export const useFilters = () => {
     createdStartDate: "",
     createdEndDate: "",
   });
-
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchText.toLowerCase());
     }, 300);

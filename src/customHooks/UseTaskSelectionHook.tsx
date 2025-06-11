@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Task,
   deleteMultipleTasks,
@@ -11,7 +11,7 @@ const useTaskSelectionHook = (dispatch: AppDispatch) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
-  const toggleSelect = (taskId: string, ctrlKey: boolean) => {
+  const toggleSelect = useCallback((taskId: string, ctrlKey: boolean) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
       if (ctrlKey) {
@@ -26,28 +26,30 @@ const useTaskSelectionHook = (dispatch: AppDispatch) => {
       }
       return newSet;
     });
-  };
+  }, []);
 
-  // handling functions
-  const handleMultiDelete = () => {
+  const handleMultiDelete = useCallback(() => {
     dispatch(
       deleteMultipleTasks(Array.from(selectedIds).map((id) => Number(id)))
     );
     setSelectedIds(new Set());
     setSelectionMode(false);
-  };
+  }, [dispatch, selectedIds]);
 
-  const handleMultiUpdate = (fields: Partial<Task>) => {
-    dispatch(
-      updateMultipleTasks({
-        ids: Array.from(selectedIds).map((id) => Number(id)),
-        updates: fields,
-      })
-    );
-    setSelectedIds(new Set());
-    setSelectionMode(false);
-    setShowUpdateModal(false);
-  };
+  const handleMultiUpdate = useCallback(
+    (fields: Partial<Task>) => {
+      dispatch(
+        updateMultipleTasks({
+          ids: Array.from(selectedIds).map((id) => Number(id)),
+          updates: fields,
+        })
+      );
+      setSelectedIds(new Set());
+      setSelectionMode(false);
+      setShowUpdateModal(false);
+    },
+    [dispatch, selectedIds]
+  );
 
   return {
     selectionMode,

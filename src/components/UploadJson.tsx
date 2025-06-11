@@ -66,7 +66,7 @@ const UploadJson: React.FC = () => {
     return /^\d{2}-\d{2}-\d{4}$/.test(dateStr);
   };
 
-  // convert DD-MM-YYYY → YYYY-MM-DD
+  // converting DD-MM-YYYY → YYYY-MM-DD
   const convertToISO = (dateStr: string) => {
     const [dd, mm, yyyy] = dateStr.split("-");
     return `${yyyy}-${mm}-${dd}`;
@@ -137,17 +137,22 @@ const UploadJson: React.FC = () => {
         }}
       >
         <h3>📥 Import Tasks</h3>
+        <button
+          className="choose-file-button"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          Choose JSON File
+        </button>
         <input
           type="file"
           accept=".json"
           onChange={handleFileSelection}
           ref={fileInputRef}
+          style={{ display: "none" }}
         />
-        {parsedTasks && (
-          <button className="upload-button" onClick={handleUpload}>
-            Upload
-          </button>
-        )}
+        <button className="upload-button" onClick={handleUpload}>
+          Upload
+        </button>
       </div>
 
       <div

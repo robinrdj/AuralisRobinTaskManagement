@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { deleteTask, updateTask } from "../../store/taskSlice";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import {updateTask } from "../../store/taskSlice";
+// import { FaEdit, FaTrash } from "react-icons/fa";
 import { RootState } from "../../store/store";
 import { useState, useEffect } from "react";
 import { formatToIndianDate, indianToISODate } from "../../utils/dateUtils";
@@ -37,8 +37,8 @@ const priorityColorMap: Record<Priority, string> = {
   high: "#e53935",
 };
 
-const EditIcon = FaEdit as unknown as React.FC;
-const TrashIcon = FaTrash as unknown as React.FC;
+// const EditIcon = FaEdit as unknown as React.FC;
+// const TrashIcon = FaTrash as unknown as React.FC;
 
 const StaticTaskCard: React.FC<Props> = ({ task }) => {
   const dispatch = useDispatch();
@@ -50,7 +50,7 @@ const StaticTaskCard: React.FC<Props> = ({ task }) => {
     setEditedTask({ ...task });
   }, [task]);
 
-  const handleDelete = () => dispatch(deleteTask(task.id));
+  // const handleDelete = () => dispatch(deleteTask(task.id));
   const handleSave = () => {
     dispatch(updateTask({ ...editedTask }));
     setIsEditing(false);

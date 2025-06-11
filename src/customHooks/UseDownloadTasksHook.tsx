@@ -1,7 +1,8 @@
+import { useCallback } from "react";
 import { Task } from "../store/taskSlice";
 
 const useDownloadTasks = () => {
-  const downloadJSON = (taskMap: Record<string, Task>) => {
+  const downloadJSON = useCallback((taskMap: Record<string, Task>) => {
     const visibleTasks = Object.values(taskMap);
     const json = JSON.stringify(visibleTasks, null, 2);
     const blob = new Blob([json], { type: "application/json" });
@@ -12,9 +13,9 @@ const useDownloadTasks = () => {
     a.download = "filtered_tasks.json";
     a.click();
     URL.revokeObjectURL(url);
-  };
+  }, []);
 
-  const downloadCSV = (taskMap: Record<string, Task>) => {
+  const downloadCSV = useCallback((taskMap: Record<string, Task>) => {
     const visibleTasks = Object.values(taskMap);
     if (visibleTasks.length === 0) return;
 
@@ -39,7 +40,7 @@ const useDownloadTasks = () => {
     a.download = "filtered_tasks.csv";
     a.click();
     URL.revokeObjectURL(url);
-  };
+  }, []);
 
   return { downloadJSON, downloadCSV };
 };
