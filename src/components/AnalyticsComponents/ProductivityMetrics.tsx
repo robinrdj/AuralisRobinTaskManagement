@@ -110,12 +110,16 @@ const ProductivityMetrics: React.FC = () => {
   };
 
   return (
-    <div style={{ margin: "0 auto" }}>
-      <h3 style={{ color: theme === "dark" ? "#fff" : "#000" }}>
-        Productivity Metrics
-      </h3>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <Bar options={options} data={data} />
-      <p style={{ textAlign: "center" }}>(task completed in last 14 weeks)</p>
     </div>
   );
 };

@@ -62,7 +62,7 @@ const TaskCompletionRate: React.FC = () => {
     labels: lastDates,
     datasets: [
       {
-        label: "Tasks Completed",
+        label: "Tasks Completed in a week",
         data: completedCountByDate,
         fill: false,
         borderColor: theme === "dark" ? "#4bc0c0" : "#36a2eb",
@@ -72,13 +72,11 @@ const TaskCompletionRate: React.FC = () => {
   };
 
   const options = {
-    responsive: true,
+    responsive: false,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "top" as const,
-        labels: {
-          color: theme === "dark" ? "#fff" : "#000",
-        },
+        display: false,
       },
       title: {
         display: false,
@@ -109,12 +107,16 @@ const TaskCompletionRate: React.FC = () => {
     },
   };
   return (
-    <div style={{ margin: "0 auto" }}>
-      <h3 style={{ color: theme === "dark" ? "#fff" : "#000" }}>
-        Task Completion Rate
-      </h3>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <Line options={options} data={data} />
-      <p style={{ textAlign: "center" }}>(task completed in last 14 days)</p>
     </div>
   );
 };

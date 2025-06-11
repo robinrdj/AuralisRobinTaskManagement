@@ -39,7 +39,8 @@ const StatusOverview: React.FC = () => {
   // #0047AB
   // #0D47A1
   const options = {
-    responsive: true,
+    responsive: false,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: false,
@@ -72,10 +73,15 @@ const StatusOverview: React.FC = () => {
   };
 
   return (
-    <div style={{ margin: "0 auto" }}>
-      <h3 style={{ color: theme === "dark" ? "#fff" : "#000" }}>
-        Status Overview
-      </h3>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <Bar data={data} options={options} />
     </div>
   );

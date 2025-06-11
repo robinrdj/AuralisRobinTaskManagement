@@ -35,7 +35,6 @@ const TaskBoard: React.FC = () => {
   const {
     selectionMode,
     selectedIds,
-    toggleSelect,
     handleMultiDelete,
     handleMultiUpdate,
     showUpdateModal,

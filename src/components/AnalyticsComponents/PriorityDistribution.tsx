@@ -33,13 +33,11 @@ const PriorityDistribution: React.FC = () => {
   };
 
   const options = {
-    responsive: true,
+    responsive: false,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "right" as const,
-        labels: {
-          color: theme === "dark" ? "#fff" : "#000",
-        },
+        display: false,
       },
       title: {
         display: false,
@@ -49,13 +47,16 @@ const PriorityDistribution: React.FC = () => {
     },
   };
   return (
-    <div style={{ width: "100%", height: "100%" }}>
-      <h3 style={{ color: theme === "dark" ? "#fff" : "#000" }}>
-        Priority Distribution
-      </h3>
-      <div style={{ position: "relative", width: "100%", height: "90%" }}>
-        <Pie data={data} options={options} />
-      </div>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Pie data={data} options={options} />
     </div>
   );
 };
