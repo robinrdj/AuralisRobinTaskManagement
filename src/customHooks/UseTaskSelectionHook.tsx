@@ -4,12 +4,14 @@ import {
   deleteMultipleTasks,
   updateMultipleTasks,
 } from "../store/taskSlice";
+import { useSnackbar} from "notistack";
 import { AppDispatch } from "../store/store";
 
 const useTaskSelectionHook = (dispatch: AppDispatch) => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const toggleSelect = useCallback((taskId: string, ctrlKey: boolean) => {
     setSelectedIds((prev) => {
@@ -29,12 +31,42 @@ const useTaskSelectionHook = (dispatch: AppDispatch) => {
   }, []);
 
   const handleMultiDelete = useCallback(() => {
-    dispatch(
-      deleteMultipleTasks(Array.from(selectedIds).map((id) => Number(id)))
-    );
-    setSelectedIds(new Set());
-    setSelectionMode(false);
-  }, [dispatch, selectedIds]);
+  const idsToDelete = Array.from(selectedIds).map((id) => Number(id));
+
+  let timeoutId: NodeJS.Timeout;
+
+  enqueueSnackbar(`${idsToDelete.length} tasks will be deleted`, {
+    variant: "warning",
+    autoHideDuration: 5000,
+    action: (snackbarId) => (
+      <button
+        onClick={() => {
+          clearTimeout(timeoutId);
+          closeSnackbar(snackbarId);
+          enqueueSnackbar("Deletion cancelled", { variant: "success" });
+        }}
+        style={{
+          background: "none",
+          border: "none",
+          color: "#00e676",
+          fontWeight: "bold",
+          cursor: "pointer",
+          marginLeft: "10px",
+        }}
+      >
+        Undo
+      </button>
+    ),
+  });
+
+  timeoutId = setTimeout(() => {
+    dispatch(deleteMultipleTasks(idsToDelete));
+    enqueueSnackbar("Tasks deleted", { variant: "info" });
+  }, 5000);
+
+  setSelectedIds(new Set());
+  setSelectionMode(false);
+}, [dispatch, selectedIds, enqueueSnackbar, closeSnackbar]);
 
   const handleMultiUpdate = useCallback(
     (fields: Partial<Task>) => {

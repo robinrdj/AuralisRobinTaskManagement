@@ -3,6 +3,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import { useSelector, useDispatch } from "react-redux";
 import { deleteTask, updateTask } from "../../store/taskSlice";
 import type { RootState } from "../../store/store";
+import { useSnackbar, closeSnackbar } from "notistack";
 import { formatToIndianDate, indianToISODate } from "../../utils/dateUtils";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import "./TaskCard.css";
@@ -46,10 +47,42 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState({ ...task });
   const theme = useSelector((state: RootState) => state.theme);
-
+  const { enqueueSnackbar } = useSnackbar();
   // handling functions
   const handleDelete = () => {
-    dispatch(deleteTask(task.id));
+    // const deletedTask = { ...task };
+
+    let timeoutId: NodeJS.Timeout;
+
+    const action = (snackbarId: string | number) => (
+      <button
+        style={{
+          background: "none",
+          border: "none",
+          color: "#00e676",
+          fontWeight: "bold",
+          cursor: "pointer",
+          marginLeft: "10px",
+        }}
+        onClick={() => {
+          clearTimeout(timeoutId); 
+          closeSnackbar(snackbarId);
+          enqueueSnackbar("Delete undone", { variant: "success" });
+        }}
+      >
+        Undo
+      </button>
+    );
+
+    timeoutId = setTimeout(() => {
+      dispatch(deleteTask(task.id));
+    }, 5000);
+
+    enqueueSnackbar("Task will be deleted", {
+      variant: "warning",
+      action,
+      autoHideDuration: 5000,
+    });
   };
   const handleSave = () => {
     dispatch(updateTask({ ...editedTask, id: task.id }));
