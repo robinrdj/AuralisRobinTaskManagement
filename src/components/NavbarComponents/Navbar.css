@@ -1,15 +1,17 @@
+/* Main navbar container */
 .navbar {
   padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
+  position: sticky;           /* Sticks navbar to the top */
   top: 0;
-  z-index: 1500;
+  z-index: 1500;              /* Ensures navbar stays above other elements */
   user-select: none;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
 }
 
+/* Brand/logo styling */
 .nav-brand {
   font-weight: 700;
   font-size: 1.3rem;
@@ -17,11 +19,13 @@
   color: inherit;
 }
 
+/* Container for navigation links */
 .nav-links {
   display: flex;
   gap: 1rem;
 }
 
+/* Individual navigation link styling */
 .nav-link {
   text-decoration: none;
   color: inherit;
@@ -31,10 +35,12 @@
   cursor: pointer;
 }
 
+/* Active navigation link styling */
 .nav-link.active {
   border-bottom-color: var(--navbar-active-border, #000);
 }
 
+/* Hamburger menu button for mobile */
 .menu-button {
   display: none;
   background: none;
@@ -45,6 +51,26 @@
   user-select: none;
 }
 
+
+/* Theme toggle button styling (light/dark mode) */
+.theme-toggle-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+/* Theme toggle button hover effect */
+.theme-toggle-button:hover {
+  background-color: var(--navbar-toggle-hover, #ddd);
+}
+
+/* Responsive styles for mobile screens */
 @media (max-width: 768px) {
   .nav-links {
     position: fixed;
@@ -66,20 +92,4 @@
   .menu-button {
     display: block;
   }
-}
-
-.theme-toggle-button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: inherit;
-  display: flex;
-  align-items: center;
-  padding: 6px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.theme-toggle-button:hover {
-  background-color: var(--navbar-toggle-hover, #ddd);
 }

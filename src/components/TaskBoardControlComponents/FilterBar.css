@@ -1,26 +1,31 @@
+/* Main container for the filter bar */
 .filter-container {
   margin-bottom: 1.5rem;
   overflow-x: hidden;
 }
 
+/* Grid layout for filter controls */
 .filter-bar {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 1fr); /* Default: 2 columns */
 }
 
+/* Grouping for each filter (label + input/select) */
 .filter-group {
   display: flex;
   flex-direction: column;
   font-size: 13px;
 }
 
+/* Label styling for filter fields */
 .filter-group label {
   font-weight: 600;
   margin-bottom: 4px;
   color: #007bff;
 }
 
+/* Input and select styling for filter fields */
 .filter-group input,
 .filter-group select {
   padding: 6px 10px;
@@ -29,8 +34,7 @@
   font-size: 14px;
 }
 
-/* responsiveness */
-/* Mobile: 2 per row */
+/* Responsive: 2 columns per row on mobile */
 @media (max-width: 767px) {
   .filter-bar {
     grid-template-columns: repeat(2, 1fr);
@@ -42,7 +46,7 @@
   }
 }
 
-/* Tablet: 4 per row */
+/* Responsive: 4 columns per row on tablets */
 @media (min-width: 768px) and (max-width: 1023px) {
   .filter-group select,
   .filter-group input {
@@ -55,7 +59,7 @@
   }
 }
 
-/* Desktop: 8 per row */
+/* Responsive: 8 columns per row on desktops */
 @media (min-width: 1024px) {
   .filter-bar {
     grid-template-columns: repeat(8, 1fr);

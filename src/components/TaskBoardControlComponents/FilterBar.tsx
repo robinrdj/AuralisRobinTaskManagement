@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import "./FilterBar.css";
 
 // Interface for filter state
@@ -52,14 +53,15 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
       <div className="filter-bar">
         {/* Button to show/hide filters */}
         <div className="filter-group">
-          <button
+          <motion.button
             onClick={toggleFilters}
-            className={`toggle-btn ${
-              filters.showFilters ? "disable" : "enable"
+            whileTap={{ scale: 0.97 }}
+            className={`medium-button ${
+              filters.showFilters ? "disable-multi-button" : "enable-multi-button"
             }`}
           >
             {filters.showFilters ? "Disable Filters" : "Show Filters"}
-          </button>
+          </motion.button>
         </div>
 
         {/* Render filter controls if filters are enabled */}

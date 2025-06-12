@@ -1,3 +1,4 @@
+/* Main container for the empty state message */
 .empty-state-message-container {
   display: flex;
   align-items: center;
@@ -11,6 +12,7 @@
   flex-wrap: wrap;
 }
 
+/* Image styling for the empty state illustration */
 .empty-state-image {
   width: 120px;
   height: 120px;
@@ -18,13 +20,14 @@
   object-fit: cover;
 }
 
+/* Text styling for the empty state message */
 .empty-state-text {
   font-size: 16px;
   color: #222;
   max-width: 300px;
 }
 
-/* responsiveness */
+/* Responsive styles for mobile screens */
 @media (max-width: 768px) {
   .no-tasks-container {
     flex-direction: column;

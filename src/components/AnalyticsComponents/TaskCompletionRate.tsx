@@ -13,6 +13,7 @@ import {
 import { useSelector } from "react-redux";
 import { Task } from "../../store/taskSlice";
 
+// Register necessary chart.js components for the Line chart
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -23,8 +24,10 @@ ChartJS.register(
   Legend
 );
 
+// Number of days to show in the chart
 const DAYS_TO_SHOW = 14;
 
+// Helper to format a Date object to DD-MM-YYYY
 const formatToDDMMYYYY = (date: Date): string => {
   const dd = String(date.getDate()).padStart(2, "0");
   const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -32,6 +35,7 @@ const formatToDDMMYYYY = (date: Date): string => {
   return `${dd}-${mm}-${yyyy}`;
 };
 
+// Helper to get an array of the last N dates (formatted as DD-MM-YYYY)
 const getLastNDates = (n: number): string[] => {
   const dates: string[] = [];
   for (let i = n - 1; i >= 0; i--) {
@@ -41,14 +45,23 @@ const getLastNDates = (n: number): string[] => {
   }
   return dates;
 };
+
+/**
+ * TaskCompletionRate component
+ * Displays a line chart showing the number of tasks completed per day for the last 14 days.
+ */
 const TaskCompletionRate: React.FC = () => {
+  // Get all tasks from Redux store
   const tasks = useSelector<{ tasks: Task[] }, Task[]>((state) => state.tasks);
+  // Get current theme (light/dark) from Redux store
   const theme = useSelector<{ theme: "light" | "dark" }, "light" | "dark">(
     (state) => state.theme
   );
 
+  // Get the last 14 dates for the x-axis
   const lastDates = getLastNDates(DAYS_TO_SHOW);
 
+  // Count the number of completed tasks for each date
   const completedCountByDate = lastDates.map((date) => {
     return tasks.filter(
       (task) =>
@@ -58,6 +71,7 @@ const TaskCompletionRate: React.FC = () => {
     ).length;
   });
 
+  // Prepare data for the Line chart
   const data = {
     labels: lastDates,
     datasets: [
@@ -71,15 +85,16 @@ const TaskCompletionRate: React.FC = () => {
     ],
   };
 
+  // Chart options, including theme-based colors for axes and grid
   const options = {
     responsive: false,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: false, // Hide legend for a cleaner look
       },
       title: {
-        display: false,
+        display: false, // Hide title (handled by parent)
         text: "Task Completion Rate",
         color: theme === "dark" ? "#fff" : "#000",
       },
@@ -106,6 +121,8 @@ const TaskCompletionRate: React.FC = () => {
       },
     },
   };
+
+  // Render the Line chart centered in its container
   return (
     <div
       style={{

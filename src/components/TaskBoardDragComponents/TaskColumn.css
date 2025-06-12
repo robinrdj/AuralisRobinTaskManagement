@@ -1,17 +1,19 @@
+/* Container for each task column on the board */
 .task-column-container {
-  min-width: 280px;
-  max-width: 25vw;
-  width: 100%;
-  min-height: 100px;
+  min-width: 280px;         /* Minimum width for column */
+  max-width: 25vw;          /* Maximum width as a percentage of viewport */
+  width: 100%;              /* Take full available width */
+  min-height: 100px;        /* Ensure column has some height even if empty */
   display: flex;
-  flex-direction: column;
+  flex-direction: column;   /* Stack children vertically */
 }
 
+/* Wrapper for each task card inside the column */
 .task-card-wrapper {
-  display: "flex";
-  align-items: "center";
-  border-radius: "4px";
-  margin-bottom: "4px";
-  padding: "4px";
-  cursor: "pointer";
+  display: flex;            /* Flex layout for alignment */
+  align-items: center;      /* Vertically center items */
+  border-radius: 4px;       /* Rounded corners */
+  margin-bottom: 4px;       /* Space below each card */
+  padding: 4px;             /* Inner spacing */
+  cursor: pointer;          /* Pointer cursor on hover */
 }

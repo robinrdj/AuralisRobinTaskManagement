@@ -27,13 +27,18 @@ const Navbar: React.FC = () => {
   // Toggle mobile menu open/close
   const toggleMenu = () => setMenuOpen((open) => !open);
 
-  // Set CSS variable for theme-dependent hover color (for legacy CSS)
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--navbar-toggle-hover",
-      theme === "dark" ? "#444" : "#ddd"
-    );
-  }, [theme]);
+  // Set CSS variable for theme-dependent hover color
+useEffect(() => {
+  document.documentElement.style.setProperty(
+    "--navbar-toggle-hover",
+    theme === "dark" ? "#444" : "#ddd"
+  );
+  document.documentElement.style.setProperty(
+    "--navbar-active-border",
+    theme === "dark" ? "#fff" : "#000"
+  );
+}, [theme]);
+
 
   return (
     <nav

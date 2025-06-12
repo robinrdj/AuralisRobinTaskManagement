@@ -1,3 +1,4 @@
+/* Main container for selection controls */
 .selection-controls-container {
   display: flex;
   flex-direction: column;
@@ -5,7 +6,7 @@
   margin-bottom: 1.5rem;
 }
 
-/* Header row: toggle + count */
+/* Header row: contains toggle button and selected count */
 .selection-header {
   display: flex;
   flex-wrap: wrap;
@@ -13,8 +14,9 @@
   align-items: center;
 }
 
+/* Toggle button for enabling/disabling multi-select */
 .toggle-btn {
-  padding: 0.5rem 1rem;
+  padding: 10px 20px;
   border: none;
   border-radius: 5px;
   color: white;
@@ -30,45 +32,45 @@
   margin-top: 13px;
 }
 
-.toggle-btn.enable {
-  background-color: #007bff;
-}
-.toggle-btn.disable {
-  background-color: #6c757d;
+/* Enable multi-select button styling */
+.enable-multi-button {
+  background-color: var(--primary-color);
+  width: 170px;
+  padding: auto;
 }
 
-/* Selected count */
+/* Disable multi-select button styling */
+.disable-multi-button {
+  background-color: var(--disabled-color);
+  width: 170px;
+}
+
+/* Selected count display */
 .selection-count {
   font-weight: 600;
   font-size: 14px;
 }
 
+/* Container for action buttons (update, delete, etc.) */
 .selection-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
 }
 
-.action-btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  color: white;
-  white-space: nowrap;
+/* Update button styling */
+.update-button {
+  background-color: var(--edit-color);
+  width: 170px;
 }
 
-.action-btn.update {
-  background-color: #ffc107;
-  color: black;
-}
-.action-btn.delete {
-  background-color: #dc3545;
+/* Delete button styling */
+.delete-button {
+  background-color: var(--delete-color);
+  width: 170px;
 }
 
-/* responsiveness */
+/* Responsive styles for tablets and up */
 @media (min-width: 768px) {
   .selection-controls-container {
     flex-direction: row;
@@ -87,6 +89,7 @@
   }
 }
 
+/* Responsive styles for mobile screens */
 @media (max-width: 767px) {
   .selection-controls-container {
     flex-direction: column;

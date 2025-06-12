@@ -38,6 +38,7 @@ interface Task {
  * TaskColumn component.
  * Represents a single column in the Kanban board, containing draggable task cards.
  * Supports multi-select and single-select of tasks.
+ * Now includes accessibility improvements.
  */
 const TaskColumn: React.FC<TaskColumnProps> = ({
   columnId,
@@ -80,7 +81,11 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   };
 
   return (
-    <div className="task-column-container">
+    <div
+      className="task-column-container"
+      role="region"
+      aria-label={`Task Column: ${column.name}`}
+    >
       {/* Column title */}
       <h3>{column.name}</h3>
       <Droppable droppableId={columnId}>
@@ -96,6 +101,8 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
               borderRadius: "6px",
               overflowY: "auto",
             }}
+            role="list"
+            aria-label={`Tasks in ${column.name}`}
           >
             {/* Render each task as a selectable and draggable card */}
             {tasks.map((task, index) => {
@@ -111,6 +118,11 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
                     backgroundColor: isSelected ? "#d0ebff" : "transparent",
                     userSelect: "none",
                   }}
+                  role="listitem"
+                  tabIndex={0}
+                  aria-label={`Task: ${task.title}${
+                    isSelected ? " (selected)" : ""
+                  }`}
                 >
                   <TaskCard task={task} index={index} />
                 </div>

@@ -116,12 +116,19 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay">
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="multi-update-modal-title"
+    >
       <form className="multi-update-form" onSubmit={handleSubmit}>
-        <h2>Update Selected Tasks</h2>
+        <h2 id="multi-update-modal-title">Update Selected Tasks</h2>
 
         {/* Title input */}
+        <label htmlFor="multi-title">Title</label>
         <input
+          id="multi-title"
           type="text"
           name="title"
           placeholder="Title"
@@ -130,7 +137,9 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
         />
 
         {/* Description textarea */}
+        <label htmlFor="multi-description">Description</label>
         <textarea
+          id="multi-description"
           name="description"
           placeholder="Description"
           value={formData.description}
@@ -138,7 +147,9 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
         />
 
         {/* Due date input */}
+        <label htmlFor="multi-due-date">Due Date</label>
         <input
+          id="multi-due-date"
           type="date"
           name="due_date"
           value={
@@ -150,7 +161,9 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
         />
 
         {/* Assignee input */}
+        <label htmlFor="multi-assignee">Assignee</label>
         <input
+          id="multi-assignee"
           type="text"
           name="assignee"
           placeholder="Assignee"
@@ -159,7 +172,13 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
         />
 
         {/* Status select */}
-        <select name="status" value={formData.status} onChange={handleChange}>
+        <label htmlFor="multi-status">Status</label>
+        <select
+          id="multi-status"
+          name="status"
+          value={formData.status}
+          onChange={handleChange}
+        >
           <option value="">-- Status --</option>
           <option value="todo">To Do</option>
           <option value="inprogress">In Progress</option>
@@ -168,7 +187,9 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
         </select>
 
         {/* Priority select */}
+        <label htmlFor="multi-priority">Priority</label>
         <select
+          id="multi-priority"
           name="priority"
           value={formData.priority}
           onChange={handleChange}

@@ -1,3 +1,4 @@
+/* Grid wrapper for task columns */
 .task-columns-wrapper {
   display: grid;
   gap: 16px;
@@ -5,27 +6,15 @@
   box-sizing: border-box;
 }
 
-.download-json,
-.download-csv {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 14px;
-  height: 40px;
-  min-width: 140px;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 13px;
+/* Download button styles */
+.download-json {
   background-color: #007bff;
 }
 .download-csv {
   background-color: #66bb6a;
 }
+
+/* Controls wrapper for selection, bulk actions, and downloads */
 .controls-wrapper {
   display: flex;
   flex-wrap: wrap;
@@ -35,14 +24,15 @@
   margin: 1rem 0 2rem 0;
 }
 
+/* Download buttons container */
 .download-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
-/* responsiveness */
+/* Responsive: stack controls vertically on small screens */
 @media (max-width: 767px) {
   .controls-wrapper {
     flex-direction: column;
@@ -54,21 +44,21 @@
   }
 }
 
-/* 1 column on mobile */
+/* Responsive: 1 column for task columns on mobile */
 @media (max-width: 767px) {
   .task-columns-wrapper {
     grid-template-columns: 1fr;
   }
 }
 
-/* 2 columns on tablets */
+/* Responsive: 2 columns for task columns on tablets */
 @media (min-width: 768px) and (max-width: 1349px) {
   .task-columns-wrapper {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* 4 columns on desktops and up */
+/* Responsive: 4 columns for task columns on desktops and up */
 @media (min-width: 1350px) {
   .task-columns-wrapper {
     grid-template-columns: repeat(4, 1fr);

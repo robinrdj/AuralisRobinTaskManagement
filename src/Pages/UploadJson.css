@@ -1,3 +1,4 @@
+/* Main container for the upload JSON page */
 .upload-json-container {
   display: flex;
   flex-wrap: wrap;
@@ -5,6 +6,7 @@
   padding: 1rem;
 }
 
+/* Styling for both upload and instructions panes */
 .upload-pane,
 .instructions-pane {
   flex: 1 1 300px;
@@ -14,35 +16,38 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Heading styles for both panes */
 .upload-pane h3,
 .instructions-pane h3 {
   margin-top: 0;
   color: #007bff;
 }
 
+/* Message shown after upload actions */
 .upload-message {
   margin-top: 0.5rem;
   font-weight: bold;
   color: green;
 }
 
+/* Styling for the example JSON code block in instructions */
 .instructions-pane pre {
   background: #e9ecef;
   padding: 0.5rem;
   border-radius: 5px;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre-wrap;      /* Allow line breaks in code block */
+  word-break: break-word;     /* Break long words if needed */
   font-size: 0.9rem;
   max-width: 100%;
   box-sizing: border-box;
 }
 
-
+/* Indent for instruction list */
 .instructions-pane ul {
   margin-left: 1rem;
 }
 
-/* responsiveness */
+/* Responsiveness: stack panes vertically and adjust font size on small screens */
 @media (max-width: 768px) {
   .upload-json-container {
     flex-direction: column;

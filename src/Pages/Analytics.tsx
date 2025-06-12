@@ -6,6 +6,9 @@ import StatusOverview from "../components/AnalyticsComponents/StatusOverview";
 import OverdueTasks from "../components/AnalyticsComponents/OverdueTasks";
 import ProductivityMetrics from "../components/AnalyticsComponents/ProductivityMetrics";
 import ChartWrapper from "../components/WrapperComponents/ChartWrapper";
+import { Download } from "lucide-react";
+import { useExportToExcel } from "../customHooks/UseExportToExcelHook";
+import { useSelector } from "react-redux";
 import "./Analytics.css";
 
 // Animation variants for the container and items (for staggered entrance)
@@ -30,16 +33,39 @@ const itemVariants = {
 /**
  * Analytics page component.
  * Displays various analytics charts and metrics for tasks.
+ * Now includes accessibility improvements.
  */
 const Analytics: React.FC = () => {
+  const { downloadExcelReport } = useExportToExcel();
+  const theme = useSelector<{ theme: "light" | "dark" }, "light" | "dark">(
+    (state) => state.theme
+  );
+
   return (
-    <div className="analytics-container">
+    <div
+      className="analytics-container"
+      role="main"
+      aria-label="Analytics Dashboard"
+    >
+      {/* Download button */}
+      <div className="download-wrapper">
+        <button
+          onClick={downloadExcelReport}
+          className={`download-button ${theme === "dark" ? "dark" : "light"}`}
+          aria-label="Download Excel Report"
+        >
+          <Download size={16} />
+        </button>
+      </div>
+
       {/* Main grid of analytics charts with staggered animation */}
       <motion.div
         className="chart-grid"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
+        role="region"
+        aria-label="Task Analytics Charts"
       >
         {/* Status Overview Chart */}
         <motion.div variants={itemVariants}>
@@ -47,18 +73,21 @@ const Analytics: React.FC = () => {
             <StatusOverview />
           </ChartWrapper>
         </motion.div>
+
         {/* Priority Distribution Chart */}
         <motion.div variants={itemVariants}>
           <ChartWrapper title="Priority Distribution">
             <PriorityDistribution />
           </ChartWrapper>
         </motion.div>
+
         {/* Productivity Metrics Chart */}
         <motion.div variants={itemVariants}>
           <ChartWrapper title="Productivity Metrics">
             <ProductivityMetrics />
           </ChartWrapper>
         </motion.div>
+
         {/* Task Completion Rate Chart */}
         <motion.div variants={itemVariants}>
           <ChartWrapper title="Task Completion Rate">
@@ -74,6 +103,8 @@ const Analytics: React.FC = () => {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         viewport={{ once: true }}
+        role="region"
+        aria-label="Overdue Tasks"
       >
         <OverdueTasks />
       </motion.div>

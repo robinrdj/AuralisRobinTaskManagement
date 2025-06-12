@@ -88,8 +88,13 @@ const AddTaskComponent: React.FC = () => {
       transition={{ duration: 0.5 }}
     >
       <Container style={{ maxWidth: 600, height: "100vh" }}>
-        <h2 className="form-title"> ADD TASK</h2>
-        <form onSubmit={handleSubmit}>
+        <h2 className="form-title" id="add-task-title">
+          ADD TASK
+        </h2>
+        <form
+          onSubmit={handleSubmit}
+          aria-labelledby="add-task-title"
+        >
           <Row gutterWidth={16}>
             <Col xs={12}>
               <label className="form-label" htmlFor="title">
@@ -105,6 +110,8 @@ const AddTaskComponent: React.FC = () => {
                 required
                 className="form-input"
                 autoComplete="off"
+                aria-required="true"
+                aria-label="Task title"
               />
             </Col>
 
@@ -120,6 +127,7 @@ const AddTaskComponent: React.FC = () => {
                 onChange={handleChange}
                 rows={4}
                 className="form-input"
+                aria-label="Task description"
               />
             </Col>
 
@@ -136,6 +144,7 @@ const AddTaskComponent: React.FC = () => {
                 onChange={handleChange}
                 className="form-input"
                 autoComplete="off"
+                aria-label="Task assignee"
               />
             </Col>
 
@@ -151,6 +160,7 @@ const AddTaskComponent: React.FC = () => {
                 onChange={handleChange}
                 className="form-input"
                 min={new Date().toLocaleDateString("en-CA")}
+                aria-label="Task due date"
               />
             </Col>
 
@@ -164,6 +174,7 @@ const AddTaskComponent: React.FC = () => {
                 value={formData.status}
                 onChange={handleChange}
                 className="form-input"
+                aria-label="Task status"
               >
                 <option value="todo">To Do</option>
                 <option value="inprogress">In Progress</option>
@@ -182,6 +193,7 @@ const AddTaskComponent: React.FC = () => {
                 value={formData.priority}
                 onChange={handleChange}
                 className="form-input"
+                aria-label="Task priority"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -194,7 +206,8 @@ const AddTaskComponent: React.FC = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 type="submit"
-                className="submit-button"
+                className="medium-button submit-button"
+                aria-label="Add Task"
               >
                 Add Task
               </motion.button>

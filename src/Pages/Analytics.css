@@ -1,3 +1,4 @@
+/* Main container for the analytics page */
 .analytics-container {
   display: flex;
   flex-direction: column;
@@ -7,6 +8,7 @@
   box-sizing: border-box;
 }
 
+/* Grid layout for analytics charts */
 .chart-grid {
   display: grid;
   gap: 2rem;
@@ -16,6 +18,7 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
+/* Grid layout for overdue tasks */
 .overdue-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -23,28 +26,59 @@
   margin-top: 1rem;
 }
 
-/* responsiveness */
-/* Ensures only 2 columns max even on ultra-wide screens */
+/* Wrapper for download buttons, aligns them to the right */
+.download-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+/* Common styles for download buttons */
+.download-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+/* Download button color for light theme */
+.download-button.light {
+  color: #000;
+}
+
+/* Download button color for dark theme */
+.download-button.dark {
+  color: #fff;
+}
+
+
+/* Responsive: 2 columns for charts on medium+ screens */
 @media (min-width: 768px) {
   .chart-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
+/* Responsive: 1 column for charts on small screens */
 @media (max-width: 767px) {
   .chart-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* Container for overdue tasks section */
 .overdue-container {
   width: 100%;
   max-width: 900px;
   margin-top: 2rem;
 }
 
+/* Responsive: 1 column for overdue tasks grid on small screens */
 @media (max-width: 600px) {
   .overdue-grid {
     grid-template-columns: 1fr;
   }
 }
+

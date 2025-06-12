@@ -12,6 +12,7 @@ import { Bar } from "react-chartjs-2";
 import { useSelector } from "react-redux";
 import { Task } from "../../store/taskSlice";
 
+// Register chart.js components needed for the Bar chart
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -20,11 +21,14 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
+// Helper to format ISO date to DD-MM-YYYY (Indian format)
 const formatToIndianDate = (isoDate: string): string => {
   const [year, month, day] = isoDate.split("-");
   return `${day}-${month}-${year}`;
 };
 
+// Helper to get the start of the week (Sunday) for a given date
 const getWeekStart = (date: Date) => {
   const d = new Date(date);
   d.setDate(d.getDate() - d.getDay()); // Sunday as start of the week
@@ -32,6 +36,7 @@ const getWeekStart = (date: Date) => {
   return d.toISOString().split("T")[0];
 };
 
+// Helper to get an array of the last N week start dates (ISO format)
 const getLastNWeeks = (n: number): string[] => {
   const today = new Date();
   const weeks: string[] = [];
@@ -43,18 +48,25 @@ const getLastNWeeks = (n: number): string[] => {
   return weeks;
 };
 
+/**
+ * ProductivityMetrics component
+ * Displays a bar chart showing the number of tasks completed per week for the last 14 weeks.
+ */
 const ProductivityMetrics: React.FC = () => {
+  // Get all tasks from Redux store
   const tasks = useSelector<{ tasks: Task[] }, Task[]>((state) => state.tasks);
+  // Get current theme (light/dark) from Redux store
   const theme = useSelector<{ theme: "light" | "dark" }, "light" | "dark">(
     (state) => state.theme
   );
 
+  // Filter only completed tasks
   const completedTasks = tasks.filter((task) => task.status === "completed");
 
-  // Generate the last 14 week labels
+  // Generate the last 14 week labels (ISO format)
   const weeksToShow = getLastNWeeks(14);
 
-  // Count tasks per week
+  // Count completed tasks per week
   const weeklyCounts: Record<string, number> = {};
   completedTasks.forEach((task) => {
     if (task.completed_on) {
@@ -63,26 +75,27 @@ const ProductivityMetrics: React.FC = () => {
     }
   });
 
-  // Final dataset based on fixed 14 weeks
+  // Prepare the data for the Bar chart
   const data = {
-    labels: weeksToShow.map(formatToIndianDate),
+    labels: weeksToShow.map(formatToIndianDate), // Format week start dates for display
     datasets: [
       {
         label: "Tasks Completed in a week",
         data: weeksToShow.map((week) => weeklyCounts[week] || 0),
-        backgroundColor: "#4caf50",
+        backgroundColor: "#4caf50", // Green bars
       },
     ],
   };
 
+  // Chart options, including theme-based colors for axes and grid
   const options = {
     responsive: true,
     plugins: {
       legend: {
-        display: false,
+        display: false, // Hide legend for a cleaner look
       },
       title: {
-        display: false,
+        display: false, // Hide title (handled by parent)
         text: "Productivity Metrics - Tasks Completed per Week",
         color: theme === "dark" ? "#fff" : "#000",
       },
@@ -109,6 +122,7 @@ const ProductivityMetrics: React.FC = () => {
     },
   };
 
+  // Render the Bar chart centered in its container
   return (
     <div
       style={{

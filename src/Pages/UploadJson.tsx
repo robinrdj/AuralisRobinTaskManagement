@@ -166,7 +166,7 @@ const UploadJson: React.FC = () => {
   ]);
 
   return (
-    <div className="upload-json-container">
+    <div className="upload-json-container" role="main" aria-label="Upload Tasks from JSON">
       {/* Upload pane for selecting and uploading JSON file */}
       <motion.div
         className="upload-pane"
@@ -176,11 +176,14 @@ const UploadJson: React.FC = () => {
         style={{
           backgroundColor: theme === "dark" ? "gray" : "#f8f9fa",
         }}
+        role="region"
+        aria-label="Upload JSON File"
       >
-        <h3>📥 Import Tasks</h3>
+        <h3 id="upload-json-title">📥 Import Tasks</h3>
         <button
           className="choose-file-button"
           onClick={() => fileInputRef.current?.click()}
+          aria-label="Choose JSON file"
         >
           Choose JSON File
         </button>
@@ -190,8 +193,13 @@ const UploadJson: React.FC = () => {
           onChange={handleFileSelection}
           ref={fileInputRef}
           style={{ display: "none" }}
+          aria-label="Select JSON file"
         />
-        <button className="upload-button" onClick={handleUpload}>
+        <button
+          className="upload-button"
+          onClick={handleUpload}
+          aria-label="Upload parsed tasks"
+        >
           {isUploading ? (
             <>
               <ClipLoader size={16} color="#36d7b7" />
@@ -217,11 +225,13 @@ const UploadJson: React.FC = () => {
         style={{
           backgroundColor: theme === "dark" ? "gray" : "#f8f9fa",
         }}
+        role="region"
+        aria-label="Instructions for JSON Upload"
       >
-        <h3>📝 Instructions</h3>
+        <h3 id="instructions-title">📝 Instructions</h3>
         <ul>
           <li>
-            Upload a valid `.json` file containing an array of task objects.
+            Upload a valid <code>.json</code> file containing an array of task objects.
           </li>
           <li>
             Each task must have:
@@ -233,8 +243,7 @@ const UploadJson: React.FC = () => {
                 <code>description</code> (string)
               </li>
               <li>
-                <code>status</code>: "todo" | "inprogress" | "review" |
-                "completed"
+                <code>status</code>: "todo" | "inprogress" | "review" | "completed"
               </li>
               <li>
                 <code>priority</code>: "low" | "medium" | "high"
@@ -257,6 +266,7 @@ const UploadJson: React.FC = () => {
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
           }}
+          aria-label="Example JSON format"
         >
           {`[
   {

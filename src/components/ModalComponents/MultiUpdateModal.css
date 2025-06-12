@@ -1,3 +1,4 @@
+/* Overlay for the modal, covers the entire screen */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -8,6 +9,7 @@
   z-index: 999;
 }
 
+/* Main form container for the multi-update modal */
 .multi-update-form {
   background-color: #fff;
   padding: 2rem;
@@ -21,8 +23,10 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   margin-top: 0px;
   justify-content: center;
+  margin-top: 50px;
 }
 
+/* Modal title styling */
 .multi-update-form h2 {
   margin-bottom: 8px;
   font-size: 1.3rem;
@@ -30,6 +34,7 @@
   font-weight: 600;
 }
 
+/* Input, textarea, and select styling inside the modal */
 .multi-update-form input[type="text"],
 .multi-update-form input[type="date"],
 .multi-update-form textarea,
@@ -41,6 +46,7 @@
   font-size: 0.95em;
 }
 
+/* Textarea specific styling */
 .multi-update-form textarea {
   resize: vertical;
   min-height: 80px;
@@ -50,11 +56,13 @@
   -ms-overflow-style: none;
 }
 
+/* Hide scrollbar for textarea on Webkit browsers */
 .multi-update-form textarea::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
 
+/* Button group container for modal actions */
 .button-group {
   display: flex;
   justify-content: flex-end;
@@ -62,6 +70,7 @@
   margin-top: 12px;
 }
 
+/* Common button styling for all buttons in the group */
 .button-group button {
   padding: 8px 12px;
   border-radius: 4px;
@@ -70,19 +79,23 @@
   font-weight: 500;
 }
 
+/* Submit button styling */
 .button-group button[type="submit"] {
   background-color: #0d47a1;
   color: #fff;
 }
 
+/* Submit button hover effect */
 .button-group button[type="submit"]:hover {
   background-color: #1565c0;
 }
 
+/* Cancel/secondary button styling */
 .button-group button[type="button"] {
   background-color: #e0e0e0;
 }
 
+/* Cancel/secondary button hover effect */
 .button-group button[type="button"]:hover {
   background-color: #bdbdbd;
 }

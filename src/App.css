@@ -1,7 +1,9 @@
 .app-container {
   min-height: 100vh;
   padding: 20px 5%;
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
 .app-container.light {
@@ -12,4 +14,29 @@
 .app-container.dark {
   background-color: #000;
   color: #fff;
+}
+:root {
+  --primary-color: #007bff;
+  --primary-hover: #0056b3;
+  --disabled-color: #6c757d;
+  --edit-color: #ffc107;
+  --delete-color: #dc3545;
+}
+
+.medium-button {
+  height: 40px;
+  padding: 0.5rem 1rem;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 5px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  color: white;
+  white-space: nowrap;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

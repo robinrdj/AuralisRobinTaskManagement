@@ -1,7 +1,10 @@
+/* Title styling for the Add Task form */
 .form-title {
   color: #007bff;
   text-align: center;
 }
+
+/* Input, textarea, and select styling for the form */
 .form-input {
   padding: 10px;
   border-radius: 5px;
@@ -13,6 +16,7 @@
   box-sizing: border-box;
 }
 
+/* Label styling for form fields */
 .form-label {
   color: #007bff;
   font-weight: 600;
@@ -20,17 +24,13 @@
   margin-bottom: 4px;
 }
 
+/* Submit button styling */
 .submit-button {
   background-color: #007bff;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
   margin-top: 15px;
-  transition: background-color 0.3s ease;
 }
 
+/* Submit button hover effect */
 .submit-button:hover {
   background-color: #0056b3;
 }

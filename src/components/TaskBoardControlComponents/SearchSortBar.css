@@ -1,3 +1,4 @@
+/* Container for the search and sort bar */
 .search-sort-bar {
   display: flex;
   flex-wrap: wrap;
@@ -5,6 +6,7 @@
   margin-bottom: 1.5rem;
 }
 
+/* Styling for the search input and sort select dropdown */
 .search-input,
 .sort-select {
   padding: 8px 10px;
@@ -15,8 +17,19 @@
   flex: 1;
 }
 
-/* responsiveness */
-/* Desktop: row layout */
+/* Utility class for visually hidden elements (for accessibility/screen readers) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Desktop: row layout for search and sort bar */
 @media (min-width: 1024px) {
   .search-sort-bar {
     flex-direction: row;
@@ -28,7 +41,7 @@
   }
 }
 
-/* Tablet: stacked vertically */
+/* Tablet: stack vertically and stretch inputs */
 @media (min-width: 768px) and (max-width: 1023px) {
   .search-sort-bar {
     flex-direction: column;
@@ -40,7 +53,7 @@
   }
 }
 
-/* Mobile: stacked vertically full width */
+/* Mobile: stack vertically and stretch inputs full width */
 @media (max-width: 767px) {
   .search-sort-bar {
     flex-direction: column;

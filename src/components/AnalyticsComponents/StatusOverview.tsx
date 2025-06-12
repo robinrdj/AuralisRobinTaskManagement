@@ -11,44 +11,53 @@ import {
 import { useSelector } from "react-redux";
 import { Task } from "../../store/taskSlice";
 
+// Register necessary chart.js components for the Bar chart
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
+// Define the possible status labels for tasks
 const statusLabels = ["todo", "inprogress", "review", "completed"];
 
+/**
+ * StatusOverview component
+ * Displays a bar chart showing the count of tasks for each status.
+ */
 const StatusOverview: React.FC = () => {
+  // Get all tasks from Redux store
   const tasks: Task[] = useSelector((state: any) => state.tasks);
+  // Get current theme (light/dark) from Redux store
   const theme = useSelector<{ theme: "light" | "dark" }, "light" | "dark">(
     (state) => state.theme
   );
 
+  // Count the number of tasks for each status
   const statusCounts = statusLabels.map(
     (status) => tasks.filter((task) => task.status === status).length
   );
 
+  // Prepare data for the Bar chart
   const data = {
-    labels: statusLabels.map((s) => s.toUpperCase()),
+    labels: statusLabels.map((s) => s.toUpperCase()), // Display status labels in uppercase
     datasets: [
       {
         label: "Tasks Count",
         data: statusCounts,
-        backgroundColor: ["#3498db", "#1E3A8A", "#9b59b6", "#27ae60"],
+        backgroundColor: ["#3498db", "#1E3A8A", "#9b59b6", "#27ae60"], // Colors for each status
       },
     ],
   };
 
-  // #0047AB
-  // #0D47A1
+  // Chart options, including theme-based colors for axes and grid
   const options = {
     responsive: false,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: false, // Hide legend for a cleaner look
         labels: {
           color: theme === "dark" ? "#fff" : "#000",
         },
       },
-      tooltip: { enabled: true },
+      tooltip: { enabled: true }, // Enable tooltips on hover
     },
     scales: {
       y: {
@@ -72,6 +81,7 @@ const StatusOverview: React.FC = () => {
     },
   };
 
+  // Render the Bar chart centered in its container
   return (
     <div
       style={{

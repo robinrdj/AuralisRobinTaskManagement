@@ -1,27 +1,27 @@
 .chart-wrapper {
-  width: 100%;
-  max-width: 400px;
-  height: 280px;
-  margin: auto;
-  padding: 1rem;
-  border: 1px solid gray;
-  box-sizing: border-box;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  width: 100%;                /* Take full width of parent */
+  max-width: 400px;           /* Limit max width for consistency */
+  height: 280px;              /* Fixed height for chart area */
+  margin: auto;               /* Center horizontally */
+  padding: 1rem;              /* Inner spacing */
+  border: 1px solid gray;     /* Subtle border */
+  box-sizing: border-box;     /* Include padding/border in size */
+  border-radius: 8px;         /* Rounded corners */
+  display: flex;              /* Flex layout for vertical stacking */
+  flex-direction: column;     /* Stack children vertically */
+  justify-content: space-between; /* Space out title and chart */
 }
 
 .chart-title {
   font-size: 1.1rem;
   text-align: center;
   margin-bottom: 0.5rem;
-  color: inherit;
+  color: inherit;             /* Inherit color for theme support */
 }
 
 .chart-content {
-  flex: 1;
-  display: flex;
+  flex: 1;                    /* Take up remaining space */
+  display: flex;              /* Center chart horizontally and vertically */
   align-items: center;
   justify-content: center;
 }

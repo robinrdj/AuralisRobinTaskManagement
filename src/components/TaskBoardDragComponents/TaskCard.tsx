@@ -6,6 +6,7 @@ import type { RootState } from "../../store/store";
 import { useSnackbar, closeSnackbar } from "notistack";
 import { formatToIndianDate, indianToISODate } from "../../utils/dateUtils";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { motion } from "framer-motion";
 import "./TaskCard.css";
 
 // Icon components for edit and delete actions
@@ -50,6 +51,7 @@ const priorityColorMap: Record<Priority, string> = {
 /**
  * TaskCard component.
  * Represents a draggable task card with edit and delete functionality.
+ * Now includes accessibility improvements.
  */
 const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const dispatch = useDispatch();
@@ -81,6 +83,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           closeSnackbar(snackbarId);
           enqueueSnackbar("Delete undone", { variant: "success" });
         }}
+        aria-label="Undo delete"
       >
         Undo
       </button>
@@ -124,19 +127,36 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           style={provided.draggableProps.style}
+          role="listitem"
+          aria-label={`Task: ${task.title}`}
         >
           {/* Edit mode UI */}
           {isEditing ? (
             <div className="edit-section">
+              <label
+                htmlFor={`edit-title-${task.id}`}
+                className="visually-hidden"
+              >
+                Edit title
+              </label>
               <input
+                id={`edit-title-${task.id}`}
                 type="text"
                 value={editedTask.title}
                 onChange={(e) =>
                   setEditedTask({ ...editedTask, title: e.target.value })
                 }
                 placeholder="Title"
+                aria-label="Edit title"
               />
+              <label
+                htmlFor={`edit-description-${task.id}`}
+                className="visually-hidden"
+              >
+                Edit description
+              </label>
               <textarea
+                id={`edit-description-${task.id}`}
                 value={editedTask.description}
                 onChange={(e) =>
                   setEditedTask({
@@ -145,8 +165,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                   })
                 }
                 placeholder="Description"
+                aria-label="Edit description"
               />
+              <label
+                htmlFor={`edit-due-date-${task.id}`}
+                className="visually-hidden"
+              >
+                Edit due date
+              </label>
               <input
+                id={`edit-due-date-${task.id}`}
                 type="date"
                 value={
                   editedTask.due_date
@@ -159,16 +187,32 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                     due_date: formatToIndianDate(e.target.value),
                   })
                 }
+                aria-label="Edit due date"
               />
+              <label
+                htmlFor={`edit-assignee-${task.id}`}
+                className="visually-hidden"
+              >
+                Edit assignee
+              </label>
               <input
+                id={`edit-assignee-${task.id}`}
                 type="text"
                 value={editedTask.assignee}
                 onChange={(e) =>
                   setEditedTask({ ...editedTask, assignee: e.target.value })
                 }
                 placeholder="Assignee"
+                aria-label="Edit assignee"
               />
+              <label
+                htmlFor={`edit-priority-${task.id}`}
+                className="visually-hidden"
+              >
+                Edit priority
+              </label>
               <select
+                id={`edit-priority-${task.id}`}
                 value={editedTask.priority}
                 onChange={(e) =>
                   setEditedTask({
@@ -176,14 +220,29 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                     priority: e.target.value as Priority,
                   })
                 }
+                aria-label="Edit priority"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
               <div className="button-group">
-                <button onClick={handleSave}>💾 Save</button>
-                <button onClick={() => setIsEditing(false)}>Cancel</button>
+                <motion.button
+                  onClick={handleSave}
+                  aria-label="Save task"
+                  whileTap={{ scale: 0.98 }}
+                  className="card-save-button"
+                >
+                  💾 Save
+                </motion.button>
+                <motion.button
+                className="card-cancel-button"
+                  onClick={() => setIsEditing(false)}
+                  aria-label="Cancel editing"
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Cancel
+                </motion.button>
               </div>
             </div>
           ) : (
@@ -216,15 +275,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                 <strong>Assignee:</strong> {task.assignee || "Unassigned"}
               </p>
               <div className="button-group">
-                <button
-                  className="action-btn update"
+                <motion.button
+                  className="card-edit-button"
                   onClick={() => setIsEditing(true)}
+                  aria-label="Edit task"
+                  whileTap={{ scale: 0.98 }}
                 >
                   <EditIcon /> edit
-                </button>
-                <button className="action-btn delete" onClick={handleDelete}>
+                </motion.button>
+                <motion.button
+                  className="card-delete-button "
+                  onClick={handleDelete}
+                  aria-label="Delete task"
+                  whileTap={{ scale: 0.98 }}
+                >
                   <TrashIcon /> delete
-                </button>
+                </motion.button>
               </div>
             </div>
           )}

@@ -13,11 +13,13 @@ import useTaskSelection from "../customHooks/UseTaskSelectionHook";
 import { useFilters } from "../customHooks/UseFiltersHook";
 import { useBoardData } from "../customHooks/UseBoardDataHook";
 import useDownloadTasks from "../customHooks/UseDownloadTasksHook";
+import { motion } from "framer-motion";
 import "./TaskBoard.css";
 
 /**
  * TaskBoard page component.
  * Displays the Kanban board with drag-and-drop, filtering, selection, and bulk actions.
+ * Now includes accessibility improvements.
  */
 const TaskBoard: React.FC = () => {
   // Get all tasks from Redux store
@@ -74,7 +76,11 @@ const TaskBoard: React.FC = () => {
   };
 
   return (
-    <div>
+    <main
+      role="main"
+      aria-label="Task Board"
+      className="taskboard-main"
+    >
       {/* Search and sort bar */}
       <SearchSortBar
         searchText={searchText}
@@ -91,7 +97,7 @@ const TaskBoard: React.FC = () => {
       />
 
       {/* Controls for selection, bulk actions, and downloads */}
-      <div className="controls-wrapper">
+      <div className="controls-wrapper" role="region" aria-label="Bulk Actions and Downloads">
         <SelectionControls
           selectionMode={selectionMode}
           selectedIds={selectedIds}
@@ -103,19 +109,23 @@ const TaskBoard: React.FC = () => {
           }}
           activateSelection={() => setSelectionMode(true)}
         />
-        <div className="download-buttons">
-          <button
+        <div className="download-buttons" role="region" aria-label="Download Task Data">
+          <motion.button
             onClick={() => downloadJSON(boardData.tasks)}
-            className="download-json"
+            className="medium-button download-json"
+            aria-label="Download tasks as JSON"
+            whileTap={{ scale: 0.97 }}
           >
             ⬇️ Download JSON
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => downloadCSV(boardData.tasks)}
-            className="download-csv"
+            className="medium-button download-csv"
+            aria-label="Download tasks as CSV"
+            whileTap={{ scale: 0.97 }}
           >
             📄 Download CSV
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -124,7 +134,11 @@ const TaskBoard: React.FC = () => {
         <EmptyStateMessage />
       ) : (
         <DragDropContext onDragEnd={onDragEnd}>
-          <div style={{ display: "flex", gap: "16px", overflowX: "auto" }}>
+          <div
+            style={{ display: "flex", gap: "16px", overflowX: "auto" }}
+            role="region"
+            aria-label="Task Columns"
+          >
             <div className="task-columns-wrapper">
               {Object.entries(boardData.columns).map(([columnId, column]) => {
                 const columnTasks = column.taskIds.map(
@@ -154,7 +168,7 @@ const TaskBoard: React.FC = () => {
           onSubmit={handleMultiUpdate}
         />
       )}
-    </div>
+    </main>
   );
 };
 

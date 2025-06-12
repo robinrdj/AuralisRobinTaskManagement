@@ -5,7 +5,7 @@
   padding: 16px;
   margin-bottom: 12px;
   border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
   border: 1px solid #e0e0e0;
   width: 85%;
   margin: auto;
@@ -17,21 +17,33 @@
   overflow-wrap: break-word;
   white-space: normal;
 }
-/* .task-card:focus {
-  outline: none !important;
-} */
 
+/* Visually hidden utility class for accessibility (screen readers only) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Light theme for task card */
 .task-card.light {
   background-color: #fff;
   color: #000;
 }
 
+/* Dark theme for task card */
 .task-card.dark {
   background-color: #000;
   color: #fff;
   border: 1px solid #444;
 }
 
+/* Title box styling inside the card */
 .title-box {
   padding: 10px;
   text-align: center;
@@ -39,6 +51,7 @@
   margin-bottom: 10px;
 }
 
+/* Title text styling with scroll for overflow */
 .title-box h3 {
   max-height: 5.2em; /* 4 lines * 1.3em */
   line-height: 1.3em;
@@ -46,16 +59,17 @@
   white-space: normal;
   word-wrap: break-word;
   font-size: 1.1em;
-
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
+/* Hide scrollbar for title on Webkit browsers */
 .title-box h3::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
 
+/* Display section for task details */
 .display-section p {
   margin: 4px 0;
   white-space: normal;
@@ -63,16 +77,17 @@
   max-height: 6.5em;
   line-height: 1.3em;
   position: relative;
-
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
+/* Hide scrollbar for display section on Webkit browsers */
 .display-section p::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
 
+/* Edit section layout for editing task fields */
 .edit-section {
   display: flex;
   flex-direction: column;
@@ -80,21 +95,23 @@
   width: 96%;
 }
 
+/* Textarea styling in edit mode */
 .edit-section textarea {
   resize: vertical;
   min-height: 80px;
   line-height: 1.4em;
   overflow-y: auto;
-
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
+/* Hide scrollbar for textarea on Webkit browsers */
 .edit-section textarea::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
 
+/* Input, textarea, and select styling in edit mode */
 .edit-section input[type="text"],
 .edit-section input[type="date"],
 .edit-section textarea,
@@ -106,25 +123,33 @@
   font-size: 0.95em;
 }
 
+/* Button group layout for edit/delete/save/cancel buttons */
 .button-group {
   display: flex;
   gap: 10px;
   margin-top: 6px;
 }
 
-.edit-btn,
-.delete-btn {
-  background-color: transparent;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  font-size: 1.2em;
+/* Edit button styling */
+.card-edit-button {
+  background-color: var(--edit-color);
+  color: white;
 }
 
-.edit-btn:hover {
-  color: orange;
+/* Delete button styling */
+.card-delete-button {
+  background-color: var(--delete-color);
+  color: white;
 }
 
-.delete-btn:hover {
-  color: red;
+/* Save button styling */
+.card-save-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Cancel button styling */
+.card-cancel-button {
+  background-color: var(--primary-color);
+  color: white;
 }
