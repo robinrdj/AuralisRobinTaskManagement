@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addTask } from "../store/taskSlice";
 import type { AppDispatch, RootState } from "../store/store";
@@ -7,10 +7,12 @@ import { motion } from "framer-motion";
 import { ClipLoader } from "react-spinners";
 import "./UploadJson.css";
 
+// Define possible values for status and priority
 type Status = "todo" | "inprogress" | "review" | "completed";
 type Priority = "low" | "medium" | "high";
 
 const UploadJson: React.FC = () => {
+  // State for upload progress and file name
   const [isUploading, setIsUploading] = useState(false);
   const [fileName, setFileName] = useState("");
 
@@ -18,67 +20,86 @@ const UploadJson: React.FC = () => {
   const theme = useSelector((state: RootState) => state.theme);
   const { enqueueSnackbar } = useSnackbar();
 
+  // State for parsed tasks and file input reference
   const [parsedTasks, setParsedTasks] = useState<any[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target?.result as string);
-        if (!Array.isArray(json)) {
-          enqueueSnackbar("Invalid JSON: Expected an array of tasks.", {
-            variant: "error",
-          });
-          resetFileInput();
-          return;
-        }
-
-        if (json.length === 0) {
-          enqueueSnackbar("JSON file is empty.", { variant: "error" });
-          resetFileInput();
-          return;
-        }
-
-        setParsedTasks(json);
-        enqueueSnackbar(
-          "File parsed successfully. Click 'Upload' to continue.",
-          {
-            variant: "info",
-          }
-        );
-      } catch (err: any) {
-        enqueueSnackbar(`Failed to parse JSON: ${err.message}`, {
-          variant: "error",
-        });
-        resetFileInput();
-      }
-    };
-
-    reader.readAsText(file);
-  };
-
-  const resetFileInput = () => {
+  /**
+   * Resets the file input and clears parsed tasks and file name.
+   */
+  const resetFileInput = useCallback(() => {
     if (fileInputRef.current) fileInputRef.current.value = "";
     setParsedTasks(null);
     setFileName("");
-  };
+  }, [fileInputRef, setParsedTasks, setFileName]);
 
-  // date format validator
-  const isValidDateFormat = (dateStr: string) => {
+  /**
+   * Handles file selection and parses the JSON file.
+   * Validates that the file contains an array of tasks.
+   */
+  const handleFileSelection = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = JSON.parse(event.target?.result as string);
+          if (!Array.isArray(json)) {
+            enqueueSnackbar("Invalid JSON: Expected an array of tasks.", {
+              variant: "error",
+            });
+            resetFileInput();
+            return;
+          }
+
+          if (json.length === 0) {
+            enqueueSnackbar("JSON file is empty.", { variant: "error" });
+            resetFileInput();
+            return;
+          }
+
+          setParsedTasks(json);
+          enqueueSnackbar(
+            "File parsed successfully. Click 'Upload' to continue.",
+            {
+              variant: "info",
+            }
+          );
+        } catch (err: any) {
+          enqueueSnackbar(`Failed to parse JSON: ${err.message}`, {
+            variant: "error",
+          });
+          resetFileInput();
+        }
+      };
+
+      reader.readAsText(file);
+    },
+    [enqueueSnackbar, resetFileInput, setFileName, setParsedTasks]
+  );
+
+  /**
+   * Validates if a date string is in DD-MM-YYYY format.
+   */
+  const isValidDateFormat = useCallback((dateStr: string) => {
     return /^\d{2}-\d{2}-\d{4}$/.test(dateStr);
-  };
+  }, []);
 
-  // converting DD-MM-YYYY → YYYY-MM-DD
-  const convertToISO = (dateStr: string) => {
+  /**
+   * Converts a date string from DD-MM-YYYY to YYYY-MM-DD.
+   */
+  const convertToISO = useCallback((dateStr: string) => {
     const [dd, mm, yyyy] = dateStr.split("-");
     return `${yyyy}-${mm}-${dd}`;
-  };
+  }, []);
 
-  const handleUpload = () => {
+  /**
+   * Handles uploading the parsed tasks to the store.
+   * Validates each task and shows notifications for success or errors.
+   */
+  const handleUpload = useCallback(() => {
     if (!parsedTasks || parsedTasks.length === 0) {
       enqueueSnackbar("No valid data to upload.", { variant: "error" });
       return;
@@ -90,6 +111,7 @@ const UploadJson: React.FC = () => {
     parsedTasks.forEach((task) => {
       const { title, description, status, priority, assignee, due_date } = task;
 
+      // Validate required fields and date format
       const isValid =
         typeof title === "string" &&
         typeof description === "string" &&
@@ -114,6 +136,7 @@ const UploadJson: React.FC = () => {
       }
     });
 
+    // Show notifications based on import results
     if (successCount === 0) {
       enqueueSnackbar("None of the tasks were valid. Nothing was imported.", {
         variant: "error",
@@ -132,10 +155,19 @@ const UploadJson: React.FC = () => {
     }
     setIsUploading(false);
     resetFileInput();
-  };
+  }, [
+    parsedTasks,
+    enqueueSnackbar,
+    setIsUploading,
+    dispatch,
+    isValidDateFormat,
+    convertToISO,
+    resetFileInput,
+  ]);
 
   return (
     <div className="upload-json-container">
+      {/* Upload pane for selecting and uploading JSON file */}
       <motion.div
         className="upload-pane"
         initial={{ opacity: 0, y: 40 }}
@@ -176,6 +208,7 @@ const UploadJson: React.FC = () => {
         )}
       </motion.div>
 
+      {/* Instructions pane for file format and example */}
       <motion.div
         className="instructions-pane"
         initial={{ opacity: 0, y: 40 }}

@@ -3,14 +3,17 @@ import { Droppable } from "@hello-pangea/dnd";
 import TaskCard from "./TaskCard";
 import "./TaskColumn.css";
 
+// Task priority and status types
 type Priority = "low" | "medium" | "high";
 type Status = "todo" | "inprogress" | "review" | "completed";
 
+// Column interface for board columns
 interface Column {
   name: string;
   taskIds: string[];
 }
 
+// Props for the TaskColumn component
 interface TaskColumnProps {
   selectionMode: boolean;
   columnId: string;
@@ -20,6 +23,7 @@ interface TaskColumnProps {
   setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
+// Task interface
 interface Task {
   id: number;
   title: string;
@@ -30,6 +34,11 @@ interface Task {
   priority: Priority;
 }
 
+/**
+ * TaskColumn component.
+ * Represents a single column in the Kanban board, containing draggable task cards.
+ * Supports multi-select and single-select of tasks.
+ */
 const TaskColumn: React.FC<TaskColumnProps> = ({
   columnId,
   column,
@@ -37,7 +46,11 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   selectedIds,
   setSelectedIds,
 }) => {
-  // Helper to toggle task selection
+  /**
+   * Helper to toggle selection of a task card.
+   * - Ctrl/Cmd + click toggles selection for that task.
+   * - Regular click selects only that task (or unselects if already the only selected).
+   */
   const toggleSelection = (taskId: string, event: React.MouseEvent) => {
     event.stopPropagation();
 
@@ -68,6 +81,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
 
   return (
     <div className="task-column-container">
+      {/* Column title */}
       <h3>{column.name}</h3>
       <Droppable droppableId={columnId}>
         {(provided) => (
@@ -83,6 +97,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
               overflowY: "auto",
             }}
           >
+            {/* Render each task as a selectable and draggable card */}
             {tasks.map((task, index) => {
               const taskId = task.id.toString();
               const isSelected = selectedIds.has(taskId);
@@ -101,6 +116,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
                 </div>
               );
             })}
+            {/* Placeholder for drag-and-drop */}
             {provided.placeholder}
           </div>
         )}

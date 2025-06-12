@@ -1,8 +1,10 @@
 import React from "react";
 import "./SearchSortBar.css";
 
+// Define possible sort options
 type SortOption = "none" | "due_date" | "priority" | "title" | "created_on";
 
+// Props for the SearchSortBar component
 interface Props {
   sortBy: SortOption;
   setSortBy: (value: SortOption) => void;
@@ -10,6 +12,10 @@ interface Props {
   setSearchText: (value: string) => void;
 }
 
+/**
+ * SearchSortBar component.
+ * Provides a search input and a sort dropdown for tasks.
+ */
 const SearchSortBar: React.FC<Props> = ({
   sortBy,
   setSortBy,
@@ -18,6 +24,7 @@ const SearchSortBar: React.FC<Props> = ({
 }) => {
   return (
     <div className="search-sort-bar">
+      {/* Search input for filtering tasks by text */}
       <input
         type="text"
         placeholder="Search tasks..."
@@ -25,6 +32,7 @@ const SearchSortBar: React.FC<Props> = ({
         onChange={(e) => setSearchText(e.target.value)}
         className="search-input"
       />
+      {/* Dropdown for selecting sort option */}
       <select
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value as SortOption)}

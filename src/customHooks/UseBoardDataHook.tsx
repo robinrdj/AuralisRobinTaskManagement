@@ -2,8 +2,10 @@ import { useMemo, useCallback } from "react";
 import { Task, Status } from "../store/taskSlice";
 import { indianToISODate } from "../utils/dateUtils";
 
+// Define possible sort options for tasks
 type SortOption = "none" | "due_date" | "priority" | "title" | "created_on";
 
+// Filters interface for filtering tasks
 interface Filters {
   showFilters: boolean;
   statusFilter: string;
@@ -15,37 +17,48 @@ interface Filters {
   createdEndDate: string;
 }
 
+/**
+ * Custom hook to process and organize board data (tasks) with sorting and filtering.
+ * Returns columns for board view and a map of filtered tasks.
+ */
 export const useBoardData = (
   tasks: Task[],
   sortBy: SortOption,
   debouncedSearch: string,
   filters: Filters
 ) => {
+  // Sorting functionality for tasks based on selected sort option
   const sortTasks = useCallback(
     (taskList: Task[]): Task[] => {
       switch (sortBy) {
         case "due_date":
+          // Sort by due date (converted to ISO format)
           return [...taskList].sort((a, b) =>
             indianToISODate(a.due_date || "").localeCompare(
               indianToISODate(b.due_date || "")
             )
           );
         case "priority":
+          // Sort by priority (high > medium > low)
           const priorityOrder = { high: 1, medium: 2, low: 3 };
           return [...taskList].sort(
             (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
           );
         case "title":
+          // Sort alphabetically by title
           return [...taskList].sort((a, b) => a.title.localeCompare(b.title));
         case "created_on":
+          // Sort by creation order (id)
           return [...taskList].sort((a, b) => a.id - b.id);
         default:
+          // No sorting
           return taskList;
       }
     },
     [sortBy]
   );
 
+  // Memoized computation for filtering and grouping tasks into board columns
   const { taskMap, columns } = useMemo(() => {
     const taskMap: Record<string, Task> = {};
     const columns: Record<Status, { name: string; taskIds: string[] }> = {
@@ -55,6 +68,7 @@ export const useBoardData = (
       completed: { name: "Completed", taskIds: [] },
     };
 
+    // Grouped tasks by status
     const grouped: Record<Status, Task[]> = {
       todo: [],
       inprogress: [],
@@ -62,23 +76,29 @@ export const useBoardData = (
       completed: [],
     };
 
+    // Filter tasks based on search, status, priority, assignee, and date ranges
     const filteredTasks = tasks.filter((task) => {
+      // Search filter (title or description)
       const matchesSearch =
         task.title.toLowerCase().includes(debouncedSearch) ||
         task.description.toLowerCase().includes(debouncedSearch);
 
+      // Status filter
       const matchesStatus = filters.statusFilter
         ? task.status === filters.statusFilter
         : true;
 
+      // Priority filter
       const matchesPriority = filters.priorityFilter
         ? task.priority === filters.priorityFilter
         : true;
 
+      // Assignee filter
       const matchesAssignee = filters.assigneeFilter
         ? task.assignee === filters.assigneeFilter
         : true;
 
+      // Due date filter (range)
       const matchesDueDate = (() => {
         if (!filters.dueStartDate && !filters.dueEndDate) return true;
         const due = new Date(indianToISODate(task.due_date || "")).getTime();
@@ -91,6 +111,7 @@ export const useBoardData = (
         return due >= start && due <= end;
       })();
 
+      // Creation date filter (range)
       const matchesCreation = (() => {
         if (!filters.createdStartDate && !filters.createdEndDate) return true;
 
@@ -108,6 +129,7 @@ export const useBoardData = (
         return creation >= start && creation <= end;
       })();
 
+      // Only include tasks that match all filters
       return (
         matchesSearch &&
         matchesStatus &&
@@ -118,11 +140,13 @@ export const useBoardData = (
       );
     });
 
+    // Place filtered tasks into their respective columns and map
     for (const task of filteredTasks) {
       taskMap[task.id.toString()] = task;
       grouped[task.status].push(task);
     }
 
+    // Sort tasks in each column and store their IDs
     for (const [status, taskList] of Object.entries(grouped)) {
       columns[status as Status].taskIds = sortTasks(taskList).map((t) =>
         t.id.toString()
@@ -132,5 +156,6 @@ export const useBoardData = (
     return { taskMap, columns };
   }, [tasks, debouncedSearch, filters, sortTasks]);
 
+  // Return columns for board and filtered task map
   return { columns, tasks: taskMap };
 };

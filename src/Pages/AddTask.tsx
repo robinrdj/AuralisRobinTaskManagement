@@ -8,9 +8,11 @@ import { motion } from "framer-motion";
 
 import "./AddTask.css";
 
+// Define possible values for priority and status
 type Priority = "low" | "medium" | "high";
 type Status = "todo" | "inprogress" | "review" | "completed";
 
+// Interface for the task form state
 interface TaskForm {
   title: string;
   description: string;
@@ -20,6 +22,7 @@ interface TaskForm {
   priority: Priority;
 }
 
+// Initial state for the form
 const initialFormState: TaskForm = {
   title: "",
   description: "",
@@ -30,10 +33,14 @@ const initialFormState: TaskForm = {
 };
 
 const AddTaskComponent: React.FC = () => {
-  const { enqueueSnackbar } = useSnackbar();
-  const dispatch = useDispatch<AppDispatch>();
-  const [formData, setFormData] = useState<TaskForm>(initialFormState);
+  const { enqueueSnackbar } = useSnackbar(); // Snackbar for notifications
+  const dispatch = useDispatch<AppDispatch>(); // Redux dispatch
+  const [formData, setFormData] = useState<TaskForm>(initialFormState); // Form state
 
+  /**
+   * Handles changes to form fields.
+   * Updates the corresponding field in formData state.
+   */
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -46,6 +53,10 @@ const AddTaskComponent: React.FC = () => {
     }));
   };
 
+  /**
+   * Handles form submission.
+   * Validates input, dispatches addTask, resets form, and shows notifications.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
@@ -69,6 +80,7 @@ const AddTaskComponent: React.FC = () => {
     }
   };
 
+  // Render the add task form UI
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}

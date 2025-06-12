@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { formatToIndianDate, indianToISODate } from "../../utils/dateUtils";
+import "./MultiUpdateModal.css";
 
+// Define possible values for priority and status
 export type Priority = "low" | "medium" | "high";
 export type Status = "todo" | "inprogress" | "review" | "completed";
 
+// Task interface for updates
 export interface Task {
   id: number;
   title: string;
@@ -15,10 +18,14 @@ export interface Task {
   created_on: string;
   completed_on?: string;
 }
+
+// Props for the MultiUpdateModal component
 interface MultiUpdateModalProps {
-  onClose: () => void;
-  onSubmit: (updates: Partial<Task>) => void;
+  onClose: () => void; // Handler to close the modal
+  onSubmit: (updates: Partial<Task>) => void; // Handler to submit updates
 }
+
+// Form state interface for the modal
 interface TaskForm {
   title: string;
   description: string;
@@ -27,6 +34,8 @@ interface TaskForm {
   assignee: string;
   priority: string;
 }
+
+// Initial state for the form fields
 const initialFormState: TaskForm = {
   title: "",
   description: "",
@@ -36,12 +45,21 @@ const initialFormState: TaskForm = {
   priority: "",
 };
 
+/**
+ * MultiUpdateModal component.
+ * Modal dialog for updating multiple selected tasks at once.
+ */
 const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  // Local state for form data
   const [formData, setFormData] = useState<TaskForm>(initialFormState);
 
+  /**
+   * Handles changes to form fields.
+   * Updates the corresponding field in formData state.
+   */
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -54,23 +72,25 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
     }));
   };
 
+  /**
+   * Handles form submission.
+   * Builds an updates object with only filled fields and calls onSubmit.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const updates: Partial<Task> = {};
 
-    if (formData.title.trim()) {
-      updates.title = formData.title.trim();
-    }
-
-    if (formData.description.trim()) {
+    // Only include fields that are filled in the updates object
+    if (formData.title.trim()) updates.title = formData.title.trim();
+    if (formData.description.trim())
       updates.description = formData.description.trim();
-    }
 
     updates.due_date = formData.due_date.trim()
       ? formatToIndianDate(formData.due_date.trim())
       : null;
 
+    // Validate and include status if valid
     const validStatuses: Status[] = [
       "todo",
       "inprogress",
@@ -81,45 +101,26 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
       updates.status = formData.status as Status;
     }
 
-    if (formData.assignee.trim()) {
-      updates.assignee = formData.assignee.trim();
-    }
+    // Include assignee if filled
+    if (formData.assignee.trim()) updates.assignee = formData.assignee.trim();
 
+    // Validate and include priority if valid
     const validPriorities: Priority[] = ["low", "medium", "high"];
     if (validPriorities.includes(formData.priority as Priority)) {
       updates.priority = formData.priority as Priority;
     }
 
+    // Call the parent handler with updates and close the modal
     onSubmit(updates);
     onClose();
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0,0,0,0.4)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 999,
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          backgroundColor: "#fff",
-          padding: "2rem",
-          borderRadius: "8px",
-          display: "grid",
-          gap: "10px",
-          width: "100%",
-          maxWidth: "400px",
-        }}
-      >
+    <div className="modal-overlay">
+      <form className="multi-update-form" onSubmit={handleSubmit}>
         <h2>Update Selected Tasks</h2>
 
+        {/* Title input */}
         <input
           type="text"
           name="title"
@@ -128,6 +129,7 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
           onChange={handleChange}
         />
 
+        {/* Description textarea */}
         <textarea
           name="description"
           placeholder="Description"
@@ -135,6 +137,7 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
           onChange={handleChange}
         />
 
+        {/* Due date input */}
         <input
           type="date"
           name="due_date"
@@ -146,6 +149,7 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
           onChange={handleChange}
         />
 
+        {/* Assignee input */}
         <input
           type="text"
           name="assignee"
@@ -154,6 +158,7 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
           onChange={handleChange}
         />
 
+        {/* Status select */}
         <select name="status" value={formData.status} onChange={handleChange}>
           <option value="">-- Status --</option>
           <option value="todo">To Do</option>
@@ -162,6 +167,7 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
           <option value="completed">Completed</option>
         </select>
 
+        {/* Priority select */}
         <select
           name="priority"
           value={formData.priority}
@@ -173,14 +179,8 @@ const MultiUpdateModal: React.FC<MultiUpdateModalProps> = ({
           <option value="high">High</option>
         </select>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "1rem",
-            marginTop: "1rem",
-          }}
-        >
+        {/* Action buttons */}
+        <div className="button-group">
           <button type="submit">Apply Updates</button>
           <button type="button" onClick={onClose}>
             Cancel

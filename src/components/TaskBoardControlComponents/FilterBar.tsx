@@ -1,6 +1,7 @@
 import React from "react";
 import "./FilterBar.css";
 
+// Interface for filter state
 interface Filters {
   showFilters: boolean;
   statusFilter: string;
@@ -12,16 +13,23 @@ interface Filters {
   createdEndDate: string;
 }
 
+// Props for the FilterBar component
 interface Props {
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   assignees: string[];
 }
 
+/**
+ * FilterBar component for advanced task filtering.
+ * Allows filtering by status, priority, assignee, and date ranges.
+ */
 const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
+  // Helper to update a specific filter field
   const update = (key: keyof Filters, value: string) =>
     setFilters({ ...filters, [key]: value });
 
+  // Toggles filter visibility and resets filters if disabling
   const toggleFilters = () => {
     if (filters.showFilters) {
       setFilters({
@@ -42,6 +50,7 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
   return (
     <div className="filter-container">
       <div className="filter-bar">
+        {/* Button to show/hide filters */}
         <div className="filter-group">
           <button
             onClick={toggleFilters}
@@ -53,8 +62,10 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
           </button>
         </div>
 
+        {/* Render filter controls if filters are enabled */}
         {filters.showFilters && (
           <>
+            {/* Status filter */}
             <div className="filter-group">
               <label>Status</label>
               <select
@@ -69,6 +80,7 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
               </select>
             </div>
 
+            {/* Priority filter */}
             <div className="filter-group">
               <label>Priority</label>
               <select
@@ -82,6 +94,7 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
               </select>
             </div>
 
+            {/* Assignee filter */}
             <div className="filter-group">
               <label>Assignee</label>
               <input
@@ -91,6 +104,7 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
               />
             </div>
 
+            {/* Due date start filter */}
             <div className="filter-group">
               <label>Due Start</label>
               <input
@@ -100,6 +114,7 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
               />
             </div>
 
+            {/* Due date end filter */}
             <div className="filter-group">
               <label>Due End</label>
               <input
@@ -109,6 +124,7 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
               />
             </div>
 
+            {/* Created date start filter */}
             <div className="filter-group">
               <label>Created Start</label>
               <input
@@ -118,6 +134,7 @@ const FilterBar: React.FC<Props> = ({ filters, setFilters, assignees }) => {
               />
             </div>
 
+            {/* Created date end filter */}
             <div className="filter-group">
               <label>Created End</label>
               <input

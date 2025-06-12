@@ -8,17 +8,21 @@ import { formatToIndianDate, indianToISODate } from "../../utils/dateUtils";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import "./TaskCard.css";
 
+// Icon components for edit and delete actions
 const EditIcon = FaEdit as unknown as React.FC;
 const TrashIcon = FaTrash as unknown as React.FC;
 
+// Task priority and status types
 type Priority = "low" | "medium" | "high";
 type Status = "todo" | "inprogress" | "review" | "completed";
 
+// Props for the TaskCard component
 interface TaskCardProps {
   task: Task;
   index: number;
 }
 
+// Task interface
 interface Task {
   id: number;
   title: string;
@@ -29,9 +33,10 @@ interface Task {
   priority: Priority;
 }
 
+// Color mapping for status and priority
 const statusColorMap: Record<Status, string> = {
-  todo: "#42a5f5", // yellow-orange
-  inprogress: "#0D47A1", // blue
+  todo: "#42a5f5", // blue
+  inprogress: "#0D47A1", // dark blue
   review: "#ab47bc", // purple
   completed: "#66bb6a", // green
 };
@@ -42,18 +47,25 @@ const priorityColorMap: Record<Priority, string> = {
   high: "#e53935", // red
 };
 
+/**
+ * TaskCard component.
+ * Represents a draggable task card with edit and delete functionality.
+ */
 const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const dispatch = useDispatch();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedTask, setEditedTask] = useState({ ...task });
-  const theme = useSelector((state: RootState) => state.theme);
+  const [isEditing, setIsEditing] = useState(false); // Edit mode state
+  const [editedTask, setEditedTask] = useState({ ...task }); // Local state for editing
+  const theme = useSelector((state: RootState) => state.theme); // Theme from Redux
   const { enqueueSnackbar } = useSnackbar();
-  // handling functions
-  const handleDelete = () => {
-    // const deletedTask = { ...task };
 
+  /**
+   * Handles deleting a task with undo option.
+   * Shows a snackbar with undo action and deletes after timeout.
+   */
+  const handleDelete = () => {
     let timeoutId: NodeJS.Timeout;
 
+    // Undo action for snackbar
     const action = (snackbarId: string | number) => (
       <button
         style={{
@@ -65,7 +77,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           marginLeft: "10px",
         }}
         onClick={() => {
-          clearTimeout(timeoutId); 
+          clearTimeout(timeoutId);
           closeSnackbar(snackbarId);
           enqueueSnackbar("Delete undone", { variant: "success" });
         }}
@@ -74,6 +86,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
       </button>
     );
 
+    // Schedule task deletion after 5 seconds
     timeoutId = setTimeout(() => {
       dispatch(deleteTask(task.id));
     }, 5000);
@@ -84,16 +97,24 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
       autoHideDuration: 5000,
     });
   };
+
+  /**
+   * Handles saving the edited task.
+   * Dispatches update and exits edit mode.
+   */
   const handleSave = () => {
     dispatch(updateTask({ ...editedTask, id: task.id }));
     setIsEditing(false);
   };
 
+  // Set card class based on theme
   const cardClass = `task-card ${theme === "dark" ? "dark" : "light"}`;
 
+  // Reset editedTask state when the task prop changes
   useEffect(() => {
     setEditedTask({ ...task });
   }, [task]);
+
   return (
     <Draggable draggableId={task.id.toString()} index={index}>
       {(provided) => (
@@ -104,6 +125,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
           {...provided.dragHandleProps}
           style={provided.draggableProps.style}
         >
+          {/* Edit mode UI */}
           {isEditing ? (
             <div className="edit-section">
               <input
@@ -138,7 +160,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                   })
                 }
               />
-
               <input
                 type="text"
                 value={editedTask.assignee}
@@ -166,6 +187,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
               </div>
             </div>
           ) : (
+            // Display mode UI
             <div className="display-section">
               <div
                 className="title-box"
@@ -173,7 +195,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
               >
                 <h3>{task.title}</h3>
               </div>
-
               <p>
                 <strong>description:</strong> {task.description}
               </p>
@@ -191,7 +212,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                   {task.priority || "Not set"}
                 </span>
               </p>
-
               <p>
                 <strong>Assignee:</strong> {task.assignee || "Unassigned"}
               </p>
@@ -214,4 +234,4 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   );
 };
 
-export default TaskCard;
+export default React.memo(TaskCard);

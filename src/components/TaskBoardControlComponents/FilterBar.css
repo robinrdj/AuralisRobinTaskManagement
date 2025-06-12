@@ -1,6 +1,5 @@
 .filter-container {
   margin-bottom: 1.5rem;
-  padding: 0 1rem;
   overflow-x: hidden;
 }
 
@@ -38,8 +37,8 @@
   }
   .filter-group input,
   .filter-group select {
-    width: 48%;
-    max-width: 48%;
+    width: 70%;
+    max-width: 70%;
   }
 }
 

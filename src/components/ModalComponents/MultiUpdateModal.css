@@ -1,0 +1,88 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.multi-update-form {
+  background-color: #fff;
+  padding: 2rem;
+  padding-right: 3rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  margin-top: 0px;
+  justify-content: center;
+}
+
+.multi-update-form h2 {
+  margin-bottom: 8px;
+  font-size: 1.3rem;
+  color: #1565c0;
+  font-weight: 600;
+}
+
+.multi-update-form input[type="text"],
+.multi-update-form input[type="date"],
+.multi-update-form textarea,
+.multi-update-form select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.95em;
+}
+
+.multi-update-form textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.4em;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.multi-update-form textarea::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.button-group button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.button-group button[type="submit"] {
+  background-color: #0d47a1;
+  color: #fff;
+}
+
+.button-group button[type="submit"]:hover {
+  background-color: #1565c0;
+}
+
+.button-group button[type="button"] {
+  background-color: #e0e0e0;
+}
+
+.button-group button[type="button"]:hover {
+  background-color: #bdbdbd;
+}

@@ -1,17 +1,17 @@
 import React, { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
-import AddTask from "./components/AddTask";
-import TaskBoard from "./components/TaskBoard";
+import AddTask from "./Pages/AddTask";
+import TaskBoard from "./Pages/TaskBoard";
 import { useSelector } from "react-redux";
 import type { RootState } from "./store/store";
-import UploadJson from "./components/UploadJson";
+import UploadJson from "./Pages/UploadJson";
 import { SnackbarProvider } from "notistack";
 import ScrollToTop from "./ScrollToTop";
 import { ClipLoader } from "react-spinners";
 import "./App.css";
 
 // Lazy loading  the Analytics component
-const Analytics = lazy(() => import("./components/Analytics"));
+const Analytics = lazy(() => import("./Pages/Analytics"));
 
 const App: React.FC = () => {
   const theme = useSelector((state: RootState) => state.theme);
