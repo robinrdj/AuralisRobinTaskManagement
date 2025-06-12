@@ -8,7 +8,6 @@
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(2, 1fr);
-  padding-inline: 0.5rem;
 }
 
 .filter-group {
@@ -36,6 +35,11 @@
 @media (max-width: 767px) {
   .filter-bar {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .filter-group input,
+  .filter-group select {
+    width: 48%;
+    max-width: 48%;
   }
 }
 
