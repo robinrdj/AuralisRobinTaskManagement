@@ -78,7 +78,7 @@ For dragging and dropping of task cards
 **Design Choices**  
 **Chart design**  
 Removed the  legends to maintain clean look and thus used dataset label feature for mentioning additional details reg the nature of the chart.  
-Download icon without text is intentional and to give a clean look.
+Download icon in the analytics page  without text is intentional and to give a clean look.
 
 ---
 
@@ -215,4 +215,5 @@ Commented the code extensively, to give more clarity and as it is an assignment.
 
 **Future Improvements**   
 Customizable Status & Priority Colors: Allow users to set their own color schemes.   
-Task History: Track changes, status durations, comments, and knowledge tags. Assignee Management: Dedicated page and dropdown selection for assignees.  
+Task History: Track changes, status durations, comments, and knowledge tags.   
+Assignee Management: Dedicated page and dropdown selection for assignees.  
