@@ -8,41 +8,40 @@ import StaticTaskCard from "./StaticTaskCard";
  * Displays a list of overdue tasks (tasks not completed and past their due date).
  */
 const OverdueTasks: React.FC = () => {
-  // Get all tasks from Redux store
   const tasks = useSelector<{ tasks: Task[] }, Task[]>((state) => state.tasks);
-  // Get current theme (light/dark) from Redux store
   const theme = useSelector<{ theme: "light" | "dark" }, "light" | "dark">(
     (state) => state.theme
   );
 
-  // Helper to format a Date object to DD-MM-YYYY
-  const formatToDDMMYYYY = (date: Date) => {
-    const dd = String(date.getDate()).padStart(2, "0");
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const yyyy = date.getFullYear();
-    return `${dd}-${mm}-${yyyy}`;
+  // Helper to convert dd-mm-yyyy to Date object (no time component)
+  const parseDDMMYYYY = (dateStr: string): Date | null => {
+    const [dd, mm, yyyy] = dateStr.split("-");
+    if (!dd || !mm || !yyyy) return null;
+    return new Date(Number(yyyy), Number(mm) - 1, Number(dd)); 
   };
 
-  // Get today's date in DD-MM-YYYY format
-  const today = formatToDDMMYYYY(new Date());
+  // Helper to strip time from a Date
+  const stripTime = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-  // Filter tasks to find overdue ones (not completed and due date before today)
-  // String comparison works since both are in dd-mm-yyyy format
+  const todayStripped = stripTime(new Date());
+
   const overdueTasks = tasks.filter((task) => {
     if (!task.due_date || task.status === "completed") return false;
-    return task.due_date < today;
+
+    const dueDateObj = parseDDMMYYYY(task.due_date);
+    if (!dueDateObj) return false;
+
+    // Compare dates with time stripped
+    return stripTime(dueDateObj) < todayStripped;
   });
 
-  // Render the overdue tasks section
   return (
     <div style={{ padding: "1rem", color: theme === "dark" ? "#fff" : "#000" }}>
-      {/* Section title */}
       <h3>Overdue Tasks</h3>
-      {/* Show count of overdue tasks */}
       <p>
         <strong>Count:</strong> {overdueTasks.length}
       </p>
-      {/* Grid of overdue task cards or empty state message */}
       <div className="overdue-grid">
         {overdueTasks.length === 0 ? (
           <p>No overdue tasks found.</p>
