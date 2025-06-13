@@ -95,7 +95,8 @@ useCallback and useMemo are used across various custom hooks.
 
 **Trade-offs made and reasoning behind choices**  
 **Virtualization**: Considered for large lists (100+ items) but omitted due to integration issues with drag-and-drop.   
-**Date Input**: Accepts any format but displays NaN-NaN-NaN for invalid dates; this is intentional to avoid excessive warnings for bulk imports.  
+**Date Input**: Accepts any format but displays NaN-NaN-NaN for invalid dates; this is intentional to avoid excessive warnings for bulk imports.
+
 ---
 
 **Known limitations or areas for improvement**  
@@ -105,7 +106,9 @@ useCallback and useMemo are used across various custom hooks.
 **Areas of Improvement**  
 **Assignee Management:** Currently string-based; could be enhanced with a dedicated assignee management page and dropdown selection.
 
-Could be really useful while adding tasks, instead of string assignee, we could give them a dropdown to choose from.  
+Could be really useful while adding tasks, instead of string assignee, we could give them a   
+dropdown to choose from.
+
 ---
 
 **Time breakdown of how you spent the 6 days**  
@@ -126,7 +129,8 @@ Identified date formatting inconsistencies and solved it throughout the entire a
 Implemented memoization, and made the analytics chart components responsive with the introduction of Wrapperclass.
 
 **Day-6**  
-Worked on documentation. Added framer motion to the application. Added clip loader for loading and styling issues fixed.  
+Worked on documentation. Added framer motion to the application. Added clip loader for loading and styling issues fixed.
+
 ---
 
 **1.Task Management System**  
@@ -207,7 +211,8 @@ Memoization is strategically used to optimize performance and reduce unnecessary
 Accessibility is ensured through ARIA labels and roles on all key interactive elements, enhancing screen reader navigation. Descriptive labels and region roles improve usability for assistive technologies. High contrast and dark mode themes support users with visual impairments.
 
 **Export Analytics data**  
-You  can download all the chart data into separate worksheets into excel by pressing the button present on the analytics page.  
+You  can download all the chart data into separate worksheets into excel by pressing the button present on the analytics page.
+
 ---
 
 **Note**  
