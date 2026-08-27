@@ -1,0 +1,7 @@
+dist
+dist-types
+coverage
+playwright-report
+test-results
+apps/api/drizzle
+package-lock.json

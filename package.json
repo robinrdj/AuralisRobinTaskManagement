@@ -1,69 +1,44 @@
 {
   "name": "auralis",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@hello-pangea/dnd": "^18.0.1",
-    "@mui/icons-material": "^7.1.1",
-    "@mui/material": "^7.1.1",
-    "@reduxjs/toolkit": "^2.8.2",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^13.5.0",
-    "chart.js": "^4.4.9",
-    "framer-motion": "^12.17.0",
-    "lucide-react": "^0.514.0",
-    "notistack": "^3.0.2",
-    "react": "^18.2.0",
-    "react-chartjs-2": "^5.3.0",
-    "react-dom": "^18.2.0",
-    "react-grid-system": "^8.2.1",
-    "react-icons": "^5.5.0",
-    "react-redux": "^9.2.0",
-    "react-router-dom": "^7.6.2",
-    "react-scripts": "5.0.1",
-    "react-spinners": "^0.17.0",
-    "react-window": "^1.8.11",
-    "uuid": "^11.1.0",
-    "web-vitals": "^2.1.4",
-    "xlsx": "^0.18.5"
+  "type": "module",
+  "description": "Auralis — a real-time, full-stack task management board.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.11"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
-    "check": "npm run lint && npm run format"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "dev": "npm-run-all --parallel dev:api dev:web",
+    "dev:web": "npm run dev --workspace @auralis/web",
+    "dev:api": "npm run dev --workspace @auralis/api",
+    "build": "npm run build --workspace @auralis/shared && npm run build --workspace @auralis/api && npm run build --workspace @auralis/web",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --build --force",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\"",
+    "db:generate": "npm run db:generate --workspace @auralis/api",
+    "db:migrate": "npm run db:migrate --workspace @auralis/api",
+    "db:seed": "npm run db:seed --workspace @auralis/api",
+    "check": "npm run typecheck && npm run lint && npm run test"
   },
   "devDependencies": {
-    "@types/react": "^19.1.6",
-    "@types/react-dom": "^19.1.6",
-    "@types/xlsx": "^0.0.35",
-    "eslint": "^8.57.1",
-    "prettier": "^3.5.3",
-    "typescript": "^4.9.5"
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "^3.0.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^17.11.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^3.0.5"
   }
 }

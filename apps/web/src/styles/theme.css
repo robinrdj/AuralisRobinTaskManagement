@@ -1,0 +1,364 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens.
+ *
+ * Every colour in the app resolves to one of these variables. v1 hardcoded
+ * hex values inline in JSX (`theme === "dark" ? "#222" : "#f5f5f5"`), which
+ * meant the palette lived in a dozen components at once. Here light is the
+ * base definition and dark overrides only what changes, so a theme is one
+ * file and adding a third one is additive.
+ *
+ * Naming is by role, not by value: `--surface-raised`, not `--gray-50`. A
+ * component asking for "the raised surface" keeps working when the palette
+ * shifts underneath it.
+ */
+
+@theme {
+  /* Type scale — 1.200 minor third, rounded to whole pixels. */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3.5rem;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+
+  /* 8px spatial grid, with 4px available for dense controls. */
+  --radius-card: 0.625rem;
+  --radius-control: 0.5rem;
+  --radius-pill: 999px;
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces, from furthest back to closest to the viewer. */
+  --surface-sunken: oklch(96.5% 0.005 265);
+  --surface-base: oklch(99% 0.003 265);
+  --surface-raised: oklch(100% 0 0);
+  --surface-overlay: oklch(100% 0 0);
+  --surface-hover: oklch(96% 0.006 265);
+  --surface-active: oklch(93% 0.008 265);
+
+  --border-subtle: oklch(92% 0.006 265);
+  --border-default: oklch(87% 0.008 265);
+  --border-strong: oklch(72% 0.012 265);
+
+  --text-primary: oklch(22% 0.015 265);
+  --text-secondary: oklch(45% 0.012 265);
+  --text-muted: oklch(58% 0.011 265);
+  --text-inverse: oklch(99% 0 0);
+
+  --accent: oklch(55% 0.19 275);
+  --accent-hover: oklch(49% 0.19 275);
+  --accent-subtle: oklch(95% 0.03 275);
+  --accent-text: oklch(45% 0.19 275);
+  --accent-ring: oklch(55% 0.19 275 / 0.4);
+
+  /*
+   * Priority and status hues are held at matched lightness and chroma so no
+   * single one shouts louder than the others on a full board. Only the hue
+   * angle changes between them.
+   */
+  --priority-low: oklch(65% 0.09 230);
+  --priority-medium: oklch(70% 0.14 85);
+  --priority-high: oklch(64% 0.17 40);
+  --priority-urgent: oklch(58% 0.2 20);
+
+  --status-todo: oklch(62% 0.02 265);
+  --status-inprogress: oklch(60% 0.15 250);
+  --status-review: oklch(65% 0.14 305);
+  --status-completed: oklch(62% 0.14 155);
+
+  --danger: oklch(55% 0.2 25);
+  --danger-subtle: oklch(95% 0.03 25);
+  --success: oklch(58% 0.15 155);
+  --success-subtle: oklch(95% 0.04 155);
+  --warning: oklch(70% 0.15 75);
+  --warning-subtle: oklch(96% 0.05 75);
+
+  --shadow-card: 0 1px 2px oklch(20% 0.02 265 / 0.06), 0 1px 3px oklch(20% 0.02 265 / 0.04);
+  --shadow-raised: 0 4px 12px oklch(20% 0.02 265 / 0.08), 0 1px 3px oklch(20% 0.02 265 / 0.06);
+  --shadow-overlay:
+    0 16px 48px oklch(20% 0.02 265 / 0.18), 0 2px 8px oklch(20% 0.02 265 / 0.08);
+  --shadow-lifted: 0 12px 32px oklch(20% 0.02 265 / 0.2);
+
+  /*
+   * Chart series colours.
+   *
+   * Held separately from the status tokens above, because a UI accent and a
+   * chart series answer to different rules. These four were stepped until
+   * every adjacent pair clears CVD separation, the chroma floor, the mode's
+   * lightness band and 3:1 against the chart surface — verified with the
+   * palette validator rather than by eye. The board's status dots keep their
+   * softer hues; only the charts use these.
+   */
+  --chart-1: #3284d0;
+  --chart-2: #d37300;
+  --chart-3: #a853ad;
+  --chart-4: #009d82;
+  --chart-grid: oklch(90% 0.006 265);
+  --chart-axis: oklch(58% 0.011 265);
+}
+
+/*
+ * Dark mode applies when the user picked it, or when they have expressed no
+ * preference and their system is dark. `[data-theme="light"]` always wins,
+ * so an explicit light choice survives a dark system setting.
+ */
+:root[data-theme="dark"],
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+
+    --surface-sunken: oklch(17% 0.012 265);
+    --surface-base: oklch(21% 0.014 265);
+    --surface-raised: oklch(25% 0.016 265);
+    --surface-overlay: oklch(27% 0.017 265);
+    --surface-hover: oklch(29% 0.018 265);
+    --surface-active: oklch(33% 0.02 265);
+
+    --border-subtle: oklch(29% 0.016 265);
+    --border-default: oklch(35% 0.018 265);
+    --border-strong: oklch(48% 0.02 265);
+
+    --text-primary: oklch(96% 0.005 265);
+    --text-secondary: oklch(76% 0.012 265);
+    --text-muted: oklch(62% 0.014 265);
+    --text-inverse: oklch(18% 0.01 265);
+
+    --accent: oklch(72% 0.16 275);
+    --accent-hover: oklch(78% 0.16 275);
+    --accent-subtle: oklch(30% 0.06 275);
+    --accent-text: oklch(80% 0.14 275);
+    --accent-ring: oklch(72% 0.16 275 / 0.5);
+
+    /* Lifted and de-saturated: the same hues would vibrate on a dark ground. */
+    --priority-low: oklch(72% 0.08 230);
+    --priority-medium: oklch(78% 0.12 85);
+    --priority-high: oklch(72% 0.15 40);
+    --priority-urgent: oklch(68% 0.18 20);
+
+    --status-todo: oklch(70% 0.02 265);
+    --status-inprogress: oklch(70% 0.13 250);
+    --status-review: oklch(74% 0.12 305);
+    --status-completed: oklch(72% 0.13 155);
+
+    --danger: oklch(68% 0.17 25);
+    --danger-subtle: oklch(30% 0.06 25);
+    --success: oklch(70% 0.13 155);
+    --success-subtle: oklch(28% 0.05 155);
+    --warning: oklch(78% 0.13 75);
+    --warning-subtle: oklch(30% 0.06 75);
+
+    --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.3), 0 1px 3px oklch(0% 0 0 / 0.2);
+    --shadow-raised: 0 4px 12px oklch(0% 0 0 / 0.4), 0 1px 3px oklch(0% 0 0 / 0.3);
+    --shadow-overlay: 0 16px 48px oklch(0% 0 0 / 0.6), 0 2px 8px oklch(0% 0 0 / 0.4);
+    --shadow-lifted: 0 12px 32px oklch(0% 0 0 / 0.5);
+
+    --chart-1: #398ad6;
+    --chart-2: #cb7f00;
+    --chart-3: #b25cb7;
+    --chart-4: #05a388;
+    --chart-grid: oklch(32% 0.016 265);
+    --chart-axis: oklch(62% 0.014 265);
+  }
+}
+
+/* The explicit choice must also win over a light system setting. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-sunken: oklch(17% 0.012 265);
+  --surface-base: oklch(21% 0.014 265);
+  --surface-raised: oklch(25% 0.016 265);
+  --surface-overlay: oklch(27% 0.017 265);
+  --surface-hover: oklch(29% 0.018 265);
+  --surface-active: oklch(33% 0.02 265);
+
+  --border-subtle: oklch(29% 0.016 265);
+  --border-default: oklch(35% 0.018 265);
+  --border-strong: oklch(48% 0.02 265);
+
+  --text-primary: oklch(96% 0.005 265);
+  --text-secondary: oklch(76% 0.012 265);
+  --text-muted: oklch(62% 0.014 265);
+  --text-inverse: oklch(18% 0.01 265);
+
+  --accent: oklch(72% 0.16 275);
+  --accent-hover: oklch(78% 0.16 275);
+  --accent-subtle: oklch(30% 0.06 275);
+  --accent-text: oklch(80% 0.14 275);
+  --accent-ring: oklch(72% 0.16 275 / 0.5);
+
+  --priority-low: oklch(72% 0.08 230);
+  --priority-medium: oklch(78% 0.12 85);
+  --priority-high: oklch(72% 0.15 40);
+  --priority-urgent: oklch(68% 0.18 20);
+
+  --status-todo: oklch(70% 0.02 265);
+  --status-inprogress: oklch(70% 0.13 250);
+  --status-review: oklch(74% 0.12 305);
+  --status-completed: oklch(72% 0.13 155);
+
+  --danger: oklch(68% 0.17 25);
+  --danger-subtle: oklch(30% 0.06 25);
+  --success: oklch(70% 0.13 155);
+  --success-subtle: oklch(28% 0.05 155);
+  --warning: oklch(78% 0.13 75);
+  --warning-subtle: oklch(30% 0.06 75);
+
+  --shadow-card: 0 1px 2px oklch(0% 0 0 / 0.3), 0 1px 3px oklch(0% 0 0 / 0.2);
+  --shadow-raised: 0 4px 12px oklch(0% 0 0 / 0.4), 0 1px 3px oklch(0% 0 0 / 0.3);
+  --shadow-overlay: 0 16px 48px oklch(0% 0 0 / 0.6), 0 2px 8px oklch(0% 0 0 / 0.4);
+  --shadow-lifted: 0 12px 32px oklch(0% 0 0 / 0.5);
+
+  --chart-1: #398ad6;
+  --chart-2: #cb7f00;
+  --chart-3: #b25cb7;
+  --chart-4: #05a388;
+  --chart-grid: oklch(32% 0.016 265);
+  --chart-axis: oklch(62% 0.014 265);
+}
+
+/* Expose the tokens to Tailwind so `bg-surface-raised` and friends work. */
+@theme inline {
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-base: var(--surface-base);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-text: var(--accent-text);
+
+  --color-priority-low: var(--priority-low);
+  --color-priority-medium: var(--priority-medium);
+  --color-priority-high: var(--priority-high);
+  --color-priority-urgent: var(--priority-urgent);
+
+  --color-status-todo: var(--status-todo);
+  --color-status-inprogress: var(--status-inprogress);
+  --color-status-review: var(--status-review);
+  --color-status-completed: var(--status-completed);
+
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+}
+
+@layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--surface-sunken);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * A visible focus ring on keyboard navigation only. The board is fully
+   * keyboard-operable, so this has to be unmissable — but it should not fire
+   * on every mouse click.
+   */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-control);
+  }
+
+  ::selection {
+    background-color: var(--accent-subtle);
+    color: var(--accent-text);
+  }
+
+  /* Respect a system-level request for less motion, everywhere, always. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Visible to screen readers, invisible on screen. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .scrollbar-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  .scrollbar-slim::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-slim::-webkit-scrollbar-thumb {
+    background-color: var(--border-default);
+    border-radius: var(--radius-pill);
+  }
+
+  .scrollbar-slim::-webkit-scrollbar-thumb:hover {
+    background-color: var(--border-strong);
+  }
+
+  .scrollbar-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

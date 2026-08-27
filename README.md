@@ -1,224 +1,240 @@
-**Deployment link**  
-Deployed in both vercel and netlify  
-[**https://auralis-robin-task-management.vercel.app/**](https://auralis-robin-task-management.vercel.app/)  
-https://auralis-robin-task-mangament.netlify.app/
+# Auralis
 
-**Github link**  
-[https://github.com/robinrdj/AuralisRobinTaskManagement](https://github.com/robinrdj/AuralisRobinTaskManagement)
+A real-time task board. Drag work across columns and everyone watching sees it
+move; every change is undoable; every date sorts correctly in every timezone.
 
----
+**[Live demo](https://auralis-robin-task-management.vercel.app/)** — one click,
+no signup. You land on a board that already has work on it.
 
-**Project setup and installation instructions**  
-Enter the following things in your terminal
-
-\-Git clone the repository  
-git clone [https://github.com/robinrdj/AuralisRobinTaskManagement](https://github.com/robinrdj/AuralisRobinTaskManagement)
-
-\-Don’t forget to change repository after cloning  
+```
+git clone https://github.com/robinrdj/AuralisRobinTaskManagement
 cd AuralisRobinTaskManagement
-
-\-npm install it to install all the packages inside package.json  
 npm install
+npm run dev
+```
 
-\-npm start to run the application  
-npm start
-
----
-
-**Available scripts and how to run them**  
-Scripts are available for running, building, linting and formatting the application
-
-npm start   
-\- to run the application  
-npm build  
- \- creates an optimized, production-ready version of your app in /build folder.  
-npm lint  
-\- to look for unused variable and styling inconsistencies  
-npm format  
-\- to format the code with consistent indentation, spacing  
-npm check  
-\- to run both lint and format together
+That's the whole setup. There is no database to install — see
+[Running without a database](#running-without-a-database).
 
 ---
 
-**Architecture overview and key design decisions**  
-First of all, created a store with two reducers,   
-\-taskSlice.tsx   
-\-themeSlice.tsx  
-And the store has been wrapped around the entire application.
+## What it does
 
-| Paths | Functionality | Main Page Component | Involved Components |
-| :---- | :---- | :---- | :---- |
-| /  | for adding tasks  | \<AddTask /\> | \- |
-| /taskboard | for viewing, searching,sorting and filtering tasks | \<TaskBoard /\> | \<TaskCard /\> \<TaskColumn /\> \<MultiUpdateModal /\> \<EmptyStateMessage /\> \<FilterBar /\> \<SearchSortBar /\> \<SelectionControls /\> |
-| /uploadTasks | for bulk uploading tasks through json file  | \<UploadJson /\> | \- |
-|  /analytics  | Contains four chart components and one overdue tasks  | \<Analytics /\> | \<PriorityDistribution /\> \<ProductivityMetrics /\> \<StatusOverview /\> \<OverdueTasks /\> \<StaticTaskCard /\> \<TaskCompletionRate /\> |
+|                               |                                                                                                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Real-time**                 | Moves, edits and deletions stream to every client on the board over server-sent events, with presence avatars. No polling, no refresh.          |
+| **Optimistic with real undo** | Changes apply instantly and roll back if the server rejects them. Every action raises a toast carrying a genuine compensating write.            |
+| **Keyboard-first**            | `Ctrl/Cmd-K` opens a command palette that searches tasks and runs commands. Cards lift and reorder from the keyboard alone.                     |
+| **Task detail**               | A side panel with inline editing, subtasks, and a readable history of every change, built from the append-only activity log.                    |
+| **Analytics**                 | Status, priority, 14-day throughput and work-ageing, each with a table view. All derived from the board — there is no separate reporting store. |
+| **Guided first run**          | Auri, a small ambient guide, watches the board and speaks only when it helps. Always dismissible.                                               |
+| **Scales past the demo**      | Columns virtualise above 40 cards; ordering uses fractional indices so a drag writes one row.                                                   |
 
-**Input Design**  
-**Title**: string (required, won’t let you to create task without specifying it)  
-**description**:string(if not specified, would be empty string)  
-**due\_date**:string(if not specified, would be empty string and would become null on task creation)  
-**status**: could be one of the following \-  “todo”, “inprogress”, “review” , “completed”   
-            (by default, set to “todo”)  
-**priority**: could be one of the following \- “low”, “medium” , “high”   
-            (by default, set to “low”)
+## Stack
 
-While storing the data in redux and localstorage, it will create additional props such as  
-**created\_on**: string and  
-**completed\_on**:  string 
+**Frontend** — React 19, TypeScript, Vite, Redux Toolkit + RTK Query, Tailwind
+v4, dnd-kit, Recharts, Motion
+**Backend** — Node, Hono, Drizzle ORM, PostgreSQL, `jose` for JWTs, scrypt for
+password hashing
+**Tooling** — Vitest, Testing Library, Playwright, ESLint, Prettier, GitHub Actions
 
-**Styling Choice**  
-\-Notistack is used for messages and alert  
-\-Combination of inline and external css is used for styling and that is by choice. Inline style usually contains parameters that need adjusting and to be easily visible for developers when they want to adjust the style.
+```
+apps/
+  api/         Hono server, Drizzle schema, migrations
+  web/         React app
+packages/
+  shared/      Domain types, Zod schemas, date and ordering logic
+```
 
-**Functional Choice**  
-\-@hello-pangea/dnd  
-For dragging and dropping of task cards
-
-**Design Choices**  
-**Chart design**  
-Removed the  legends to maintain clean look and thus used dataset label feature for mentioning additional details reg the nature of the chart.  
-Download icon in the analytics page  without text is intentional and to give a clean look.
+The shared package is the point: the task schema, the status and priority
+enums, and the date helpers are defined once and consumed by both sides. The
+Postgres enum types are generated from the same constants the UI renders, so
+adding a status is one edit plus a migration, and the type system points at
+every site that needs updating.
 
 ---
 
-**Custom hooks**  
-\-useBoardDataHook \- takes care of the sorting, filtering and searching functions  
-\-useFiltersHook- for setting the value for sort and search and filters  
-\-useTaskSelectionHook- operations related to selected task cards.  
-\-useDownloadTasksHook \- to handle the download operations  
-\-useExportToExcelHook \- to download the data present in analytics page
+## Engineering notes
 
-useCallback and useMemo are used across various custom hooks.
+Six things in here were interesting to build.
 
----
+### Dates that sort
 
-**Trade-offs made and reasoning behind choices**  
-**Virtualization**: Considered for large lists (100+ items) but omitted due to integration issues with drag-and-drop.   
-**Date Input**: Accepts any format but displays NaN-NaN-NaN for invalid dates; this is intentional to avoid excessive warnings for bulk imports.
+The first version stored due dates as `"dd-MM-yyyy"` strings. Those don't sort
+chronologically — `"01-01-2027"` sorts before `"26-08-2026"` — so date sorting,
+range filtering and overdue detection were all quietly wrong.
 
----
+Now every date is an ISO calendar day in storage and in transit, formatted only
+at render, in the viewer's locale. Due dates are `date` columns read back as
+text, because a timestamp-backed due date lands on the wrong day for anyone west
+of UTC. [`dates.test.ts`](packages/shared/src/dates.test.ts) pins the old bug
+explicitly so it cannot come back.
 
-**Known limitations or areas for improvement**  
-**Known limitations**  
-**Filter Reset:** Clearing date ranges requires disabling all filters, which also hides the filter bar. **Date Format:** Invalid date formats are accepted but result in placeholder values; could be improved with more granular warnings. 
+### Ordering without renumbering
 
-**Areas of Improvement**  
-**Assignee Management:** Currently string-based; could be enhanced with a dedicated assignee management page and dropdown selection.
+Cards carry a string `position` and sort lexicographically. Moving a card
+computes a key between its new neighbours — one row written, no renumbering, and
+two clients dragging different cards produce different keys, so concurrent drags
+merge instead of clobbering each other.
 
-Could be really useful while adding tasks, instead of string assignee, we could give them a   
-dropdown to choose from.
+The interesting part is proving it holds up: the tests subdivide the same gap
+300 times and run 500 randomised inserts, asserting total order and uniqueness
+throughout. See [`ordering.ts`](packages/shared/src/ordering.ts).
 
----
+### Virtualised columns _and_ drag-and-drop
 
-**Time breakdown of how you spent the 6 days**  
-**Day-1**  
-spent more time on understanding the reqs and searching for correct packages to use for drag and drop of task cards  and charts and initialized the application.
+The first version documented this as "considered for large lists but omitted due
+to integration issues with drag-and-drop" — the old library needed every
+draggable mounted, which is exactly what virtualisation prevents.
 
-**Day-2**  
-Created a store with Task and theme reducers to be accessible across the entire application.
+dnd-kit tracks items by id rather than by mounted node, so only the visible
+window needs to exist. Columns switch to `@tanstack/react-virtual` above 40
+cards and stay on a plain list below it, where the list is cheaper and
+drag-scrolling is smoother.
 
-**Day-3**  
-Worked on the Add task page and task board page and completed them with basic styling.
+### Session security
 
-**Day-4**  
-Worked on the Analytics page and completed it with improved styles for overall application.  
-Identified date formatting inconsistencies and solved it throughout the entire application.
+Access tokens are short-lived JWTs in httpOnly cookies, so an XSS bug cannot
+reach them. Refresh tokens are opaque, stored as SHA-256 digests, and rotated on
+every use.
 
-**Day-5**  
-Implemented memoization, and made the analytics chart components responsive with the introduction of Wrapperclass.
+Rotation is what makes theft _detectable_: if a token is presented twice, the
+second presentation finds it already rotated, and the entire token family is
+revoked — logging out the attacker and the real user together. That path is
+covered by a test that plays out the whole scenario.
 
-**Day-6**  
-Worked on documentation. Added framer motion to the application. Added clip loader for loading and styling issues fixed.
+Passwords use scrypt from Node's standard library: memory-hard, no native module
+to compile, and the parameters live inside the hash string so they can be raised
+later while old hashes still verify. Login verifies against a dummy hash when the
+email doesn't exist, so a wrong email and a wrong password take the same time.
 
----
+### Undo that actually undoes
 
-**1.Task Management System**  
-**Task Operations**  
-All the task operations mentioned in the requirement document such as create task,edit tasks, delete tasks, bulk operations and drag and drop are completed.  
-Task Organization  
-All the organization requirements mentioned in the document such as status columns, filtering, searching and sorting are completed.
+The first version implemented undo by _delaying_ deletes for five seconds, which
+left the board showing a task that was neither present nor gone — and a refresh
+in that window resurrected it.
 
-**2.Data Management and state**  
-\-Data is stored and retrieved from local storage with proper serialization and deserialization.  
-\-Redux Toolkit is used for state management.  
-\-Ui is optimised for better user experience by custom styling, and using framer motion and the successful interactions are provided with success messages using notistack.  
-\-Error handling is done with appropriate messages with the use of notistack.
+Here the change is applied immediately and undo issues a compensating write.
+Deleting and restoring reuses the original task id, so the card returns to its
+original position rather than the end of the column. Undo handlers live in a
+registry outside Redux, because reducers have to stay serialisable.
 
-**3.Analytics Dashboard**  
-Separate Chart  Components such as   
-\-PriorityDistribution  
-\-ProductivityMetrics  
-\-TaskCompletionRate  
-\-OverdueTask  
-\-StatusOveriw  
-are created.
+### An onboarding engine, not a scripted tour
 
-**Advanced features and bonus points are discussed below**
+Auri is a state machine over live board state. Each step declares a predicate;
+the engine shows the highest-priority step whose predicate currently holds and
+which hasn't been seen or dismissed.
 
-**Any additional features or optimizations implemented**  
-**Dark/Light Theme: Toggle with system preference detection**  
-Theme is set up with the help of redux js toolkit and is used throughout the entire application
+That means guidance tracks what you're actually doing. Create a task and the
+"create a task" step stops applying on its own — nothing advances a cursor.
+Steps can also recur: the overdue warning speaks up whenever work slips, while
+first-run tips appear once. Every dismissal is permanent and persisted.
 
-**Responsive Design: Mobile-first approach, works well on all screen sizes**  
-Entire application is completely responsive thanks to custom media query stylings, react grids system and custom styling.
-
-**Code Splitting: Lazy load the analytics dashboard**  
-Lazy loaded the analytics dashboard  
-Used the following in the app.tsx  
-const Analytics \= lazy(() \=\> import("./components/Analytics"));  
-\<Route   
-path="/analytics"   
-element=  
-{   
-\<Suspense fallback={\<div\>Loading Analytics...\</div\>}\>  
- \<Analytics /\>  
- \</Suspense\>  
- }   
-/\>
-
-**Empty States: Meaningful empty states with call-to-action**  
-Created a responsive EmptyStateMessage component with a smiley face and a direction message and used it inside the task board when there are no tasks in the task board.
-
-**Custom Hooks: Advanced custom hooks for complex logic**  
-Custom hooks are created for complex logics and used.  
-Such as  
-\-useBoardData  
-\-useDownloadTasks  
-\-useFilters  
-\-useTaskSelection
-
-**Advanced Animations: Smooth transitions and micro-interactions using Framer Motion**  
-Used on the Analytics page, charts now animate into view sequentially thanks to framer motion and also.applied a scroll-triggered slide-and-fade animation to the "Overdue Tasks" section using Framer Motion. Also used in AddTasks and uploadJson pages.
-
-**Export: Export tasks to JSON or CSV format**  
-Downloadable buttons for downloading json and csv files  are presented in /taskboard page
-
-**Import: Import tasks from JSON with validation and conflict resolution**  
-Upload buttons for uploading json file of  tasks are presented in /uploadJson page
-
-**Loading States: Skeleton screens and loading indicators**  
-Loading indicators are used but the skeleton screens are not used considering the use of framer motion.
-
-**Debounced Search: Implement debounced search functionality**  
-Searching functionality uses debouncing with a current delay of 300 milliseconds and the function it uses is shown below.  
-useEffect(() \=\> { const timer \= setTimeout(() \=\> { setDebouncedSearch(searchText.toLowerCase()); }, 300); return () \=\> clearTimeout(timer); }, \[searchText\]);
-
-**Memoization: Proper use of React.memo, useMemo, and useCallback**  
-Memoization is strategically used to optimize performance and reduce unnecessary re-renders. `React.memo` wraps components like `TaskCard` to re-render only on prop changes. `useMemo` caches expensive computations in hooks like `useBoardDataHook`, and `useCallback` ensures stable function references for event handlers. This keeps the app responsive as task volume and interactions scale.
-
-**Accessibility: ARIA labels, screen reader support, high contrast mode**  
-Accessibility is ensured through ARIA labels and roles on all key interactive elements, enhancing screen reader navigation. Descriptive labels and region roles improve usability for assistive technologies. High contrast and dark mode themes support users with visual impairments.
-
-**Export Analytics data**  
-You  can download all the chart data into separate worksheets into excel by pressing the button present on the analytics page.
+Replay it any time with `?tour=reset`.
 
 ---
 
-**Note**  
-Commented the code extensively, to give more clarity and as it is an assignment. In a real working environment, I could reduce it, if needed.
+## Testing
 
-**Future Improvements**   
-Customizable Status & Priority Colors: Allow users to set their own color schemes.   
-Task History: Track changes, status durations, comments, and knowledge tags.   
-Assignee Management: Dedicated page and dropdown selection for assignees.  
+**260 tests.** 192 unit and integration, 68 end-to-end across desktop and mobile
+viewports.
+
+```
+npm test          # unit + integration
+npm run test:e2e  # Playwright, against the real stack
+npm run check     # typecheck, lint, test
+```
+
+API tests run against **PGlite** — real PostgreSQL compiled to WebAssembly,
+in-process. Every test file gets its own throwaway database with no service
+container and nothing to install, and the schema tests assert against
+`select version()` to prove it really is Postgres. The usual shortcut,
+SQLite-in-tests and Postgres-in-production, hides exactly the bugs that matter:
+enum rejection, `on conflict`, transaction semantics, timezone handling.
+
+The end-to-end tests run against the actual Hono server and Vite dev server with
+nothing mocked. They caught two real bugs during development: Escape not closing
+the command palette, and the sample-data seeder firing twelve sequential
+requests and twelve toasts instead of one batch.
+
+CI runs typecheck, lint, tests, a production build and a
+[bundle budget](scripts/check-bundle-size.mjs) on every push.
+
+## Performance
+
+First load is **117 KB gzipped** — what a signed-out visitor downloads for the
+landing page. The board, charts, drag-and-drop engine and animation library are
+all behind dynamic imports:
+
+| Chunk               | Gzipped | When it loads     |
+| ------------------- | ------- | ----------------- |
+| Entry + CSS         | 117 KB  | Always            |
+| Authenticated shell | 71 KB   | After sign-in     |
+| Board               | 35 KB   | Opening the board |
+| Analytics           | 102 KB  | Opening analytics |
+
+The budget is enforced in CI, so a careless import fails the build rather than
+quietly costing every visitor. Auri's idle animations and the landing page
+reveals are CSS rather than JavaScript, which keeps the 114 KB animation library
+off the first-load path entirely.
+
+## Accessibility
+
+Colour is never the only signal — priority and status always carry a word as
+well as a hue. The chart palette was stepped until every adjacent pair clears
+colour-vision-deficiency separation, a chroma floor, the mode's lightness band
+and 3:1 contrast against the chart surface, verified with a validator rather
+than by eye. Every chart has a table view.
+
+The board is fully keyboard-operable, there's a skip link as the first tab stop,
+dialogs trap focus and close on Escape, and `prefers-reduced-motion` stops Auri
+bobbing.
+
+---
+
+## Running without a database
+
+With `DATABASE_URL` unset the API runs on PGlite, an in-process PostgreSQL, and
+prints a warning that data won't survive a restart. That's what makes
+`git clone && npm install && npm run dev` work with no setup.
+
+For persistence locally, point `DATABASE_URL` at any Postgres and run
+`npm run db:migrate`. The same migrations run against both, because it's the
+same engine.
+
+## Deployment
+
+The API needs a `DATABASE_URL` and a `JWT_SECRET`; the web app is static files.
+
+```bash
+npm run build
+npm run db:migrate --workspace @auralis/api   # or let the server do it on boot
+npm start --workspace @auralis/api
+```
+
+Migrations also run automatically at startup, so a deploy can't serve traffic
+against a schema it wasn't built for. See [`.env.example`](.env.example) for
+every variable and what it does.
+
+## Scripts
+
+|                       |                                              |
+| --------------------- | -------------------------------------------- |
+| `npm run dev`         | API and web app together                     |
+| `npm run build`       | Production build of all three packages       |
+| `npm test`            | Unit and integration tests                   |
+| `npm run test:e2e`    | Playwright                                   |
+| `npm run check`       | Typecheck, lint and test                     |
+| `npm run db:generate` | Generate a migration from schema changes     |
+| `npm run db:migrate`  | Apply pending migrations                     |
+| `npm run db:seed`     | Create a demo account with a populated board |
+
+## Known limitations
+
+- **Realtime is single-instance.** The hub fans out in-process, so horizontal
+  scaling needs Postgres `LISTEN`/`NOTIFY` or Redis behind the same interface.
+  It's deliberately narrow enough that this is a change to one file.
+- **One board per user.** The schema supports many, including membership roles;
+  the UI only surfaces the first.
+- **Dependencies** are modelled and enforced in the API — including cycle
+  rejection — but not yet exposed in the interface. Subtasks are.

@@ -1,0 +1,129 @@
+/*
+ * Auri's idle animations.
+ *
+ * Every property animated here (transform, opacity) is compositor-only, so the
+ * perpetual loops never trigger layout or paint. Mood changes only the colour
+ * and the timing — the keyframes themselves are shared.
+ */
+
+.auri {
+  --auri-color: var(--accent);
+  --auri-bob: 4px;
+  --auri-pulse: 1;
+  --auri-period: 3.4s;
+  --auri-orbit: 9s;
+
+  display: block;
+  animation: auri-bob var(--auri-period) ease-in-out infinite;
+  will-change: transform;
+}
+
+.auri__halo {
+  opacity: 0.14;
+  transform-origin: 22px 22px;
+  animation: auri-halo calc(var(--auri-period) * 1.3) ease-in-out infinite;
+}
+
+.auri__motes {
+  transform-origin: 22px 22px;
+  animation: auri-orbit var(--auri-orbit) linear infinite;
+}
+
+.auri--idle {
+  --auri-color: var(--accent);
+}
+
+.auri--excited {
+  --auri-color: var(--accent);
+  --auri-bob: 8px;
+  --auri-pulse: 1.06;
+  --auri-period: 1.5s;
+  --auri-orbit: 4s;
+}
+
+.auri--pointing {
+  --auri-color: var(--status-inprogress);
+  --auri-bob: 3px;
+  --auri-pulse: 1.02;
+  --auri-period: 2s;
+}
+
+.auri--concerned {
+  --auri-color: var(--warning);
+  --auri-bob: 2px;
+  --auri-pulse: 0.97;
+  --auri-period: 2.6s;
+}
+
+.auri--celebrating {
+  --auri-color: var(--status-completed);
+  --auri-bob: 12px;
+  --auri-pulse: 1.12;
+  --auri-period: 0.9s;
+  --auri-orbit: 2.2s;
+}
+
+@keyframes auri-bob {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(calc(var(--auri-bob) * -1)) scale(var(--auri-pulse));
+  }
+}
+
+@keyframes auri-halo {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.14;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.06;
+  }
+}
+
+@keyframes auri-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * A perpetual bobbing light is exactly what a vestibular-motion sensitivity
+ * setting is asking to stop. Auri stays visible, just still.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .auri,
+  .auri__halo,
+  .auri__motes {
+    animation: none;
+  }
+}
+
+/* A one-shot entrance for content that reveals on the landing page. */
+@keyframes auri-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: auri-rise 0.5s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+}
