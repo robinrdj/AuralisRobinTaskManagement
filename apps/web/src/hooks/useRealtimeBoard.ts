@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Task } from "@auralis/shared";
 import { api, CLIENT_ID } from "@/store/api";
+import { apiUrl } from "@/config";
 import { useAppDispatch } from "@/store";
 
 export interface PresenceMember {
@@ -31,7 +32,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
     if (!boardId) return;
 
     let hasConnectedBefore = false;
-    const source = new EventSource(`/api/boards/${boardId}/stream`, {
+    const source = new EventSource(apiUrl(`/boards/${boardId}/stream`), {
       withCredentials: true,
     });
 

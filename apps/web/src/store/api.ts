@@ -7,6 +7,7 @@ import type {
   Task,
   UpdateTaskInput,
 } from "@auralis/shared";
+import { API_ORIGIN } from "@/config";
 
 /**
  * Identifies this browser tab to the server, so the realtime stream can tell
@@ -29,7 +30,7 @@ export interface BoardMember {
 }
 
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: "/api",
+  baseUrl: API_ORIGIN ? API_ORIGIN + "/api" : "/api",
   credentials: "include",
   prepareHeaders: (headers) => {
     headers.set("X-Client-Id", CLIENT_ID);
