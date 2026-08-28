@@ -280,3 +280,81 @@ describe("auth", () => {
     });
   });
 });
+
+describe("cross-site cookies", () => {
+  it("uses SameSite=Lax by default, keeping the session first-party", async () => {
+    const harness = await createHarness();
+    try {
+      const response = await harness.request("/api/auth/guest", { method: "POST" });
+      for (const header of response.headers.getSetCookie()) {
+        expect(header.toLowerCase()).toContain("samesite=lax");
+      }
+    } finally {
+      await harness.close();
+    }
+  }, 60_000);
+
+  it("switches to SameSite=None and Secure when told the deployment is split", async () => {
+    const harness = await createHarness({ CROSS_SITE_COOKIES: "true" });
+    try {
+      const response = await harness.request("/api/auth/guest", { method: "POST" });
+      const cookies = response.headers.getSetCookie();
+      expect(cookies.length).toBeGreaterThan(0);
+
+      for (const header of cookies) {
+        const lower = header.toLowerCase();
+        // Without both of these the browser drops the cookie on a split
+        // deployment, and every request after sign-in is a 401.
+        expect(lower).toContain("samesite=none");
+        expect(lower).toContain("secure");
+        expect(lower).toContain("httponly");
+      }
+    } finally {
+      await harness.close();
+    }
+  }, 60_000);
+});
+
+describe("origin guard", () => {
+  let harness: TestHarness;
+
+  beforeAll(async () => {
+    harness = await createHarness();
+  }, 60_000);
+
+  afterAll(async () => {
+    await harness?.close();
+  });
+
+  it("allows a write from an allowed origin", async () => {
+    const response = await harness.request("/api/auth/guest", {
+      method: "POST",
+      headers: { Origin: "http://localhost:5173" },
+    });
+    expect(response.status).toBe(201);
+  });
+
+  it("refuses a write from an origin that is not on the allowlist", async () => {
+    const response = await harness.request("/api/auth/guest", {
+      method: "POST",
+      headers: { Origin: "https://evil.example.com" },
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it("still allows a write with no Origin at all, for non-browser clients", async () => {
+    // curl and server-to-server callers send no Origin, and cannot be carrying
+    // a cookie they were never given.
+    const response = await harness.request("/api/auth/guest", { method: "POST" });
+    expect(response.status).toBe(201);
+  });
+
+  it("does not block reads from another origin", async () => {
+    // CORS governs whether the response can be read; the guard is only about
+    // preventing the write from happening.
+    const response = await harness.request("/api/health", {
+      headers: { Origin: "https://evil.example.com" },
+    });
+    expect(response.status).toBe(200);
+  });
+});

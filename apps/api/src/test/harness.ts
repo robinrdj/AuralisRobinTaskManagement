@@ -29,7 +29,9 @@ export interface Session {
   boardId: string;
 }
 
-export async function createHarness(): Promise<TestHarness> {
+export async function createHarness(
+  overrides: Record<string, string> = {}
+): Promise<TestHarness> {
   const handle = createDatabase(undefined);
   await runMigrations(handle);
 
@@ -37,6 +39,7 @@ export async function createHarness(): Promise<TestHarness> {
     NODE_ENV: "test",
     JWT_SECRET: "test-secret-that-is-long-enough-to-pass-validation",
     CORS_ORIGINS: "http://localhost:5173",
+    ...overrides,
   } as NodeJS.ProcessEnv);
 
   const hub = new RealtimeHub();

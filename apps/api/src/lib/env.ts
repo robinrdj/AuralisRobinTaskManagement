@@ -12,6 +12,19 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   /** Comma-separated list of origins allowed to send credentialed requests. */
   CORS_ORIGINS: z.string().default("http://localhost:5173"),
+  /**
+   * Set when the API and the web app are on different sites, which is the
+   * normal split deployment: a static host for the app, a Node host for the
+   * API. Session cookies then need SameSite=None so the browser will send
+   * them at all, which in turn requires Secure.
+   *
+   * SameSite=Lax is doing CSRF duty when this is off, so turning it on
+   * shifts that job to the CORS allowlist and the Origin check in app.ts.
+   */
+  CROSS_SITE_COOKIES: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   ACCESS_TOKEN_TTL: z.string().default("15m"),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
   /** Guest accounts created by the demo flow are reaped after this long. */

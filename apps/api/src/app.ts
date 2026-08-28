@@ -51,6 +51,30 @@ export function createApp({ db, env, hub = new RealtimeHub() }: CreateAppOptions
       allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     })
   );
+  /**
+   * Reject a state-changing request whose Origin is not on the allowlist.
+   *
+   * With SameSite=None the browser attaches session cookies to cross-site
+   * requests, so Lax is no longer standing between an attacker page and a
+   * write. CORS already blocks the *response* from being read, but this
+   * stops the write from happening at all — the request never reaches a
+   * handler. Browsers always send Origin on cross-origin requests, and on
+   * same-origin unsafe methods too, so a missing Origin means a non-browser
+   * client, which cannot be riding a cookie it never had.
+   */
+  app.use("/api/*", async (c, next) => {
+    const unsafe = ["POST", "PATCH", "PUT", "DELETE"].includes(c.req.method);
+    const origin = c.req.header("Origin");
+
+    if (unsafe && origin && !env.corsOrigins.includes(origin)) {
+      return c.json(
+        { error: { code: "forbidden_origin", message: "That origin is not allowed" } },
+        403
+      );
+    }
+    await next();
+  });
+
   app.use("/api/*", trackOrigin);
 
   app.get("/api/health", (c) => c.json({ status: "ok", uptime: Math.round(process.uptime()) }));

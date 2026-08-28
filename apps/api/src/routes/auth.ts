@@ -72,15 +72,20 @@ async function issueSession(
     expiresAt,
   });
 
+  /*
+   * SameSite=Lax keeps the cookie first-party, which is both safer and
+   * enough when the app and API share an origin. On a split deployment the
+   * browser would simply never send it, so the session silently fails —
+   * a guest is created and the very next request is a 401.
+   */
   const base = {
-    // Not readable from JavaScript, so an XSS bug cannot exfiltrate the session.
+    // Not readable from JavaScript, so an XSS bug cannot exfiltrate it.
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    // "lax" still sends the cookie on top-level navigation while blocking
-    // the cross-site POSTs that CSRF depends on.
-    sameSite: "lax",
+    // SameSite=None is only honoured on a secure connection.
+    secure: env.CROSS_SITE_COOKIES || env.NODE_ENV === "production",
+    sameSite: env.CROSS_SITE_COOKIES ? ("none" as const) : ("lax" as const),
     path: "/",
-  } as const;
+  };
 
   setCookie(c, ACCESS_COOKIE, accessToken, { ...base, maxAge: 60 * 60 });
   // Scoped to the refresh endpoint so it is not attached to ordinary API calls.
