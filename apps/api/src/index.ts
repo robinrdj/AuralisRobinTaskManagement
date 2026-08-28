@@ -41,8 +41,16 @@ const reaper = setInterval(reapGuests, 60 * 60 * 1000);
 reaper.unref();
 void reapGuests();
 
-const server = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
-  console.log(`[api] listening on http://localhost:${info.port} (${handle.driver})`);
+/*
+ * Bind on every interface.
+ *
+ * Inside a container the platform reaches the process from outside the
+ * namespace, so listening only on loopback answers nothing and the router
+ * returns 502. Node usually defaults to this, but leaving it implicit means
+ * depending on that default staying put.
+ */
+const server = serve({ fetch: app.fetch, port: env.PORT, hostname: "0.0.0.0" }, (info) => {
+  console.log(`[api] listening on 0.0.0.0:${info.port} (${handle.driver})`);
 });
 
 /**
