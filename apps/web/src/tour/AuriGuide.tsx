@@ -83,17 +83,24 @@ export function AuriGuide({ tasks, onSeedSamples }: AuriGuideProps) {
     return selectStep(facts, new Set(tour.seen), new Set(tour.dismissed));
   }, [facts, tour.disabled, tour.seen, tour.dismissed]);
 
-  // Mark a step seen once it has actually been on screen for a moment, so a
-  // step that flashes past during a state change is not silently burned.
-  const seenTimer = useRef<number | undefined>(undefined);
+  /**
+   * Retire a tip only when the thing it asked for is actually done.
+   *
+   * This used to mark a step seen on a 1.2s timer, and a seen step stops
+   * being eligible — so every tip deleted itself after a second and a bit,
+   * whether or not it had been read. A tip now stays put until the user
+   * dismisses it or resolves the condition behind it.
+   */
+  const shownRef = useRef<TourStep | null>(null);
   useEffect(() => {
-    window.clearTimeout(seenTimer.current);
-    if (!step) return;
-    seenTimer.current = window.setTimeout(() => {
-      dispatch(markStepSeen(step.id));
-    }, 1_200);
-    return () => window.clearTimeout(seenTimer.current);
-  }, [step, dispatch]);
+    const previous = shownRef.current;
+    // Only retire it if its own condition no longer holds. A step displaced by
+    // a higher-priority one has not been acted on and should come back.
+    if (previous && previous.id !== step?.id && previous.once && !previous.applies(facts)) {
+      dispatch(markStepSeen(previous.id));
+    }
+    shownRef.current = step;
+  }, [step, facts, dispatch]);
 
   const runAction = useCallback(
     (action: NonNullable<TourStep["action"]>) => {

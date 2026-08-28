@@ -42,6 +42,20 @@ test.describe("Auri, on an empty board", () => {
     await expect(page.locator('[data-tour="new-task"]')).toBeVisible();
   });
 
+  test("stays on screen until it is dismissed", async ({ page }) => {
+    await signUpWithEmptyBoard(page);
+    const tip = page.getByText(/let's make your first task/i);
+    await expect(tip).toBeVisible({ timeout: 10_000 });
+
+    // The tip used to mark itself seen on a 1.2s timer, which made it
+    // ineligible and so it vanished before it could be read.
+    await page.waitForTimeout(6000);
+    await expect(tip).toBeVisible();
+
+    await page.getByRole("button", { name: "Got it" }).click();
+    await expect(tip).toBeHidden();
+  });
+
   test("stays out of the way — the board is still usable", async ({ page }) => {
     await signUpWithEmptyBoard(page);
     await expect(page.getByText(/let's make your first task/i)).toBeVisible({

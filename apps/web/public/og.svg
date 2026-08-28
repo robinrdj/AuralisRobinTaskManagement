@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Auralis — a real-time task board">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Task Manager — a real-time task board">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#1a1d26"/>
@@ -19,7 +19,7 @@
   <circle cx="138" cy="138" r="9" fill="#ffffff" opacity="0.75"/>
 
   <text x="150" y="330" font-family="Inter, system-ui, sans-serif" font-size="76" font-weight="700" fill="#f5f6fa">
-    Auralis
+    Task Manager
   </text>
   <text x="150" y="404" font-family="Inter, system-ui, sans-serif" font-size="38" font-weight="400" fill="#a8adbd">
     A task board that keeps up with the room

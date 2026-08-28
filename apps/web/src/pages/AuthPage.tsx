@@ -51,7 +51,7 @@ export function AuthPage({ mode }: { mode: "signin" | "signup" }) {
         <Link to="/" className="mb-6 flex items-center justify-center gap-2">
           <AuriSprite mood="idle" size={32} />
           <span className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">
-            Auralis
+            Task Manager
           </span>
         </Link>
 

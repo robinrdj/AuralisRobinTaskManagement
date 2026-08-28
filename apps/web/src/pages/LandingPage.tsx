@@ -31,7 +31,7 @@ export function LandingPage() {
       <header className="mx-auto flex max-w-5xl items-center gap-3 px-6 py-5">
         <AuriSprite mood="idle" size={28} />
         <span className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
-          Auralis
+          Task Manager
         </span>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={cycleTheme} aria-label={`Theme: ${theme}`}>

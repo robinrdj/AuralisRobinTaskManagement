@@ -21,7 +21,7 @@ export default function App() {
 
   const { data: session, isLoading, isError } = useGetSessionQuery();
 
-  if (isLoading) return <FullScreenSpinner label="Loading Auralis" />;
+  if (isLoading) return <FullScreenSpinner label="Loading Task Manager" />;
 
   // A 401 here is the normal signed-out state, not an error worth showing.
   if (isError || !session) {

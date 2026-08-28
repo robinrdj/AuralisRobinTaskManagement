@@ -40,10 +40,10 @@ export function AppShell({
       </a>
 
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--border-subtle)] bg-[var(--surface-base)] px-4 md:px-6">
-        <NavLink to="/board" className="flex items-center gap-2" aria-label="Auralis home">
+        <NavLink to="/board" className="flex items-center gap-2" aria-label="Task Manager home">
           <AuriSprite mood="idle" size={26} />
           <span className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
-            Auralis
+            Task Manager
           </span>
         </NavLink>
 
