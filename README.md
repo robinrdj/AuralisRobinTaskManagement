@@ -132,6 +132,19 @@ missing title — an unrecognised status is imported as "To do" with a note
 rather than losing the row. v1 accepted unparseable dates silently and then
 rendered `NaN-NaN-NaN` on the card.
 
+### One origin, so the session cookie survives
+
+The app and the API are deployed to different hosts. Calling the API directly
+from the browser makes the session cookie a third-party cookie, which Chrome
+already blocks in Incognito and is phasing out generally — so sign-in worked
+in normal browsing and silently 401d elsewhere.
+
+`SameSite=None` papers over that, and has an expiry date. The frontend host
+instead proxies `/api` to the API, so the browser only ever talks to one
+origin. The cookie is first-party, `SameSite=Lax` keeps doing its CSRF job,
+and CORS is not involved on the happy path at all. `CROSS_SITE_COOKIES` still
+exists for deployments that genuinely are split.
+
 ### An onboarding engine, not a scripted tour
 
 Auri is a state machine over live board state. Each step declares a predicate;
