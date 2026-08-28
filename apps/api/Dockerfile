@@ -7,6 +7,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/api/package.json apps/api/
+# The web workspace is not built here, but its manifest must exist: the root
+# package.json globs apps/*, and npm ci refuses a lockfile whose workspace
+# set does not match what is on disk.
+COPY apps/web/package.json apps/web/
 RUN npm ci --workspace @auralis/shared --workspace @auralis/api --include-workspace-root
 
 COPY tsconfig.base.json ./
@@ -22,6 +26,10 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/api/package.json apps/api/
+# The web workspace is not built here, but its manifest must exist: the root
+# package.json globs apps/*, and npm ci refuses a lockfile whose workspace
+# set does not match what is on disk.
+COPY apps/web/package.json apps/web/
 RUN npm ci --omit=dev --workspace @auralis/shared --workspace @auralis/api --include-workspace-root \
  && npm cache clean --force
 
