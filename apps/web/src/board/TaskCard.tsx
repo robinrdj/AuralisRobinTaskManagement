@@ -54,6 +54,7 @@ function TaskCardImpl({
   return (
     <article
       ref={isOverlay ? undefined : setNodeRef}
+      data-task-id={task.id}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,

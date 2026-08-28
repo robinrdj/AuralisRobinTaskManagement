@@ -33,7 +33,8 @@ export default function AuthenticatedApp({
 }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const boardId = boards[0]?.id;
+  const board = boards[0];
+  const boardId = board?.id;
 
   // Reads from the cache the board already filled, so the palette can search
   // tasks without issuing a request of its own.
@@ -59,7 +60,7 @@ export default function AuthenticatedApp({
           path="/board"
           element={
             <Suspense fallback={<RouteSpinner label="Loading board" />}>
-              <BoardPage key={boardId} boardId={boardId} />
+              <BoardPage key={boardId} boardId={boardId} boardName={board?.name ?? "Board"} />
             </Suspense>
           }
         />

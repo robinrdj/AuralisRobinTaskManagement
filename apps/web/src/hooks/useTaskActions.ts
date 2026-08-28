@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import type { CreateTaskInput, Task, TaskStatus, UpdateTaskInput } from "@auralis/shared";
 import {
+  useBulkCreateTasksMutation,
   useBulkDeleteTasksMutation,
   useBulkUpdateTasksMutation,
   useCreateTaskMutation,
@@ -31,6 +32,7 @@ export function useTaskActions(boardId: string | undefined) {
   const [deleteTask] = useDeleteTaskMutation();
   const [bulkUpdate] = useBulkUpdateTasksMutation();
   const [bulkDelete] = useBulkDeleteTasksMutation();
+  const [bulkCreate] = useBulkCreateTasksMutation();
 
   const notifyFailure = useCallback(
     (message: string) => {
@@ -93,6 +95,34 @@ export function useTaskActions(boardId: string | undefined) {
       }
     },
     [boardId, createTask, bulkDelete, dispatch, notifyFailure]
+  );
+
+  /**
+   * Writes an imported file in one request.
+   *
+   * Separate from `createMany` because import can be hundreds of rows: the
+   * server assigns positions for the whole batch in a single transaction, and
+   * undo removes exactly what was added rather than emptying the board.
+   */
+  const importTasks = useCallback(
+    async (inputs: CreateTaskInput[]) => {
+      if (!boardId || inputs.length === 0) return;
+      try {
+        const created = await bulkCreate({ boardId, tasks: inputs }).unwrap();
+        dispatch(
+          pushToast({
+            message: `Imported ${created.length} ${created.length === 1 ? "task" : "tasks"}`,
+            tone: "success",
+            undoToken: registerUndo(async () => {
+              await bulkDelete({ ids: created.map((task) => task.id), boardId }).unwrap();
+            }),
+          })
+        );
+      } catch {
+        notifyFailure("Could not import those tasks. Nothing was added.");
+      }
+    },
+    [boardId, bulkCreate, bulkDelete, dispatch, notifyFailure]
   );
 
   const update = useCallback(
@@ -249,7 +279,7 @@ export function useTaskActions(boardId: string | undefined) {
     [boardId, bulkDelete, createTask, dispatch, notifyFailure]
   );
 
-  return { create, createMany, update, move, remove, updateMany, removeMany };
+  return { create, createMany, importTasks, update, move, remove, updateMany, removeMany };
 }
 
 function byParentsFirst(a: Task, b: Task): number {

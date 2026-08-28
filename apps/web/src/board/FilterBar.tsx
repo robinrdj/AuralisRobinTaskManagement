@@ -28,12 +28,15 @@ export function FilterBar({
   connected,
   presentMembers,
   onAddTask,
+  importExport,
 }: {
   boardId: string;
   members: BoardMember[];
   connected: boolean;
   presentMembers: PresenceMember[];
   onAddTask: () => void;
+  /** The export/import menu, passed in so the bar stays presentational. */
+  importExport?: React.ReactNode;
 }) {
   const dispatch = useAppDispatch();
   const { filters, sortBy, sortDirection, selectionMode } = useAppSelector((state) => state.ui);
@@ -145,6 +148,7 @@ export function FilterBar({
 
         <div className="ml-auto flex items-center gap-2">
           <PresenceStack members={presentMembers} connected={connected} />
+          {importExport}
           <Button size="md" variant="primary" data-tour="new-task" onClick={onAddTask}>
             <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
               <path

@@ -13,6 +13,7 @@ import { useGetTaskActivityQuery, type BoardMember } from "@/store/api";
 import { PRIORITY_LABELS, STATUS_LABELS, cx } from "@/components/ui/labels";
 import { Button, Skeleton } from "@/components/ui/primitives";
 import { describeActivity, formatRelativeTime } from "./activityText";
+import { Dependencies } from "./Dependencies";
 import type { useTaskActions } from "@/hooks/useTaskActions";
 
 type Actions = ReturnType<typeof useTaskActions>;
@@ -28,17 +29,21 @@ type Actions = ReturnType<typeof useTaskActions>;
 export function TaskDetailPanel({
   task,
   subtasks,
+  siblings,
   members,
   actions,
   onClose,
 }: {
   task: Task;
   subtasks: Task[];
+  /** Other top-level tasks on the board, for the dependency picker. */
+  siblings: Task[];
   members: BoardMember[];
   actions: Actions;
   onClose: () => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const [dependencyError, setDependencyError] = useState<string | null>(null);
   const { data: activity = [], isLoading: activityLoading } = useGetTaskActivityQuery(task.id);
 
   // Escape closes; Tab is trapped inside for as long as the panel is open.
@@ -226,6 +231,17 @@ export function TaskDetailPanel({
             completed={completedSubtasks}
             actions={actions}
           />
+
+          <Dependencies
+            task={task}
+            candidates={siblings}
+            onError={(message) => setDependencyError(message)}
+          />
+          {dependencyError && (
+            <p role="alert" className="-mt-3 text-xs text-[var(--danger)]">
+              {dependencyError}
+            </p>
+          )}
 
           <section>
             <h3 className="mb-2 text-2xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">

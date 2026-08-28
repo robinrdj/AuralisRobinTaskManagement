@@ -362,3 +362,50 @@
     background: transparent;
   }
 }
+
+/*
+ * Windows high-contrast mode, and any other forced-colours setting.
+ *
+ * The browser replaces the palette wholesale here, which flattens everything
+ * this design encodes with colour — priority edges, status dots, the focus
+ * ring. Rather than fight it, the borders are restored from the system's own
+ * keywords so structure survives, and anything that carried meaning through
+ * colour alone gets a visible outline instead.
+ */
+@media (forced-colors: active) {
+  :root {
+    --surface-sunken: Canvas;
+    --surface-base: Canvas;
+    --surface-raised: Canvas;
+    --surface-overlay: Canvas;
+    --text-primary: CanvasText;
+    --text-secondary: CanvasText;
+    --text-muted: GrayText;
+    --border-subtle: CanvasText;
+    --border-default: CanvasText;
+    --accent: Highlight;
+    --accent-text: LinkText;
+  }
+
+  /* Forced colours drop background-color, so a card needs a real border. */
+  [data-task-id],
+  [role="dialog"],
+  [role="menu"] {
+    border: 1px solid CanvasText;
+  }
+
+  /* The priority edge is a colour; give it width so it still reads. */
+  [data-task-id] {
+    border-left-width: 4px;
+  }
+
+  :focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  /* Status and priority dots become invisible; the adjacent label carries it. */
+  [aria-hidden="true"].rounded-full {
+    forced-color-adjust: none;
+  }
+}

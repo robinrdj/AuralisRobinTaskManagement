@@ -4,6 +4,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import {
+  bulkCreateTasksSchema,
   bulkDeleteTasksSchema,
   bulkUpdateTasksSchema,
   createTaskSchema,
@@ -11,7 +12,8 @@ import {
   updateTaskSchema,
   type Task,
 } from "@auralis/shared";
-import { activities, boardMembers, tasks } from "../db/schema.js";
+import { activities, boardMembers, taskDependencies, tasks } from "../db/schema.js";
+import { alias } from "drizzle-orm/pg-core";
 import { badRequest, conflict, forbidden, notFound } from "../lib/errors.js";
 import { requireAuth } from "../middleware/auth.js";
 import type { AppContext } from "../lib/context.js";
@@ -214,6 +216,81 @@ router.patch("/bulk", zValidator("json", bulkUpdateTasksSchema), async (c) => {
   return c.json({ tasks: updated.map(serialize) });
 });
 
+/**
+ * Creates many tasks in one transaction — the endpoint import uses.
+ *
+ * Positions are assigned per destination column from the current tail, so an
+ * imported batch lands in file order rather than in whatever order the inserts
+ * happened to complete.
+ */
+router.post("/bulk-create", zValidator("json", bulkCreateTasksSchema), async (c) => {
+  const db = c.get("db");
+  const user = c.get("user");
+  const { boardId, tasks: incoming } = c.req.valid("json");
+  await assertBoardAccess(db, boardId, user.id, true);
+
+  const existing = await db
+    .select({ status: tasks.status, position: tasks.position })
+    .from(tasks)
+    .where(eq(tasks.boardId, boardId));
+
+  const tails = new Map<string, string[]>();
+  for (const row of existing) {
+    tails.set(row.status, [...(tails.get(row.status) ?? []), row.position]);
+  }
+
+  const rows = incoming.map((input) => {
+    const status = input.status ?? "todo";
+    let position = input.position;
+    if (!position) {
+      const column = tails.get(status) ?? [];
+      position = positionAfterLast(column);
+      // Track what this batch has already claimed, so the next task in the
+      // same column lands after it rather than on top of it.
+      tails.set(status, [...column, position]);
+    }
+
+    return {
+      id: input.id ?? randomUUID(),
+      boardId,
+      title: input.title,
+      description: input.description ?? "",
+      status,
+      priority: input.priority ?? "low",
+      dueDate: input.dueDate ?? null,
+      assigneeId: input.assigneeId ?? null,
+      parentId: input.parentId ?? null,
+      position,
+      completedAt: status === "completed" ? new Date() : null,
+    };
+  });
+
+  const created = await db.transaction(async (tx) => {
+    const inserted = await tx.insert(tasks).values(rows).returning();
+    await tx.insert(activities).values(
+      inserted.map((row) => ({
+        taskId: row.id,
+        boardId,
+        actorId: user.id,
+        kind: "task.created" as const,
+        payload: { title: row.title, imported: true },
+      }))
+    );
+    return inserted;
+  });
+
+  const hub = c.get("hub");
+  for (const row of created) {
+    hub.publish(boardId, {
+      type: "task.upserted",
+      origin: c.get("originId"),
+      task: serialize(row) as unknown as Record<string, unknown>,
+    });
+  }
+
+  return c.json({ tasks: created.map(serialize) }, 201);
+});
+
 router.post("/bulk-delete", zValidator("json", bulkDeleteTasksSchema), async (c) => {
   const db = c.get("db");
   const user = c.get("user");
@@ -360,6 +437,89 @@ router.delete("/:id", zValidator("param", idParamSchema), async (c) => {
   return c.body(null, 204);
 });
 
+/**
+ * What this task waits on, and what waits on it.
+ *
+ * Both directions are returned together: the panel needs "blocked by" to warn
+ * before completion, and "blocking" to explain why other work is stuck.
+ */
+router.get("/:id/dependencies", zValidator("param", idParamSchema), async (c) => {
+  const db = c.get("db");
+  const { id } = c.req.valid("param");
+  await loadTask(db, id, c.get("user").id, false);
+
+  const blockers = alias(tasks, "blockers");
+  const blocked = alias(tasks, "blocked");
+
+  const [blockedBy, blocking] = await Promise.all([
+    db
+      .select({ task: blockers })
+      .from(taskDependencies)
+      .innerJoin(blockers, eq(blockers.id, taskDependencies.blockerId))
+      .where(eq(taskDependencies.blockedId, id)),
+    db
+      .select({ task: blocked })
+      .from(taskDependencies)
+      .innerJoin(blocked, eq(blocked.id, taskDependencies.blockedId))
+      .where(eq(taskDependencies.blockerId, id)),
+  ]);
+
+  return c.json({
+    blockedBy: blockedBy.map((row) => serialize(row.task)),
+    blocking: blocking.map((row) => serialize(row.task)),
+  });
+});
+
+const dependencyBodySchema = z.object({ blockerId: z.string().uuid() });
+
+router.post(
+  "/:id/dependencies",
+  zValidator("param", idParamSchema),
+  zValidator("json", dependencyBodySchema),
+  async (c) => {
+    const db = c.get("db");
+    const { id } = c.req.valid("param");
+    const { blockerId } = c.req.valid("json");
+
+    if (blockerId === id) throw badRequest("A task cannot block itself");
+
+    const blocked = await loadTask(db, id, c.get("user").id, true);
+    const blocker = await loadTask(db, blockerId, c.get("user").id, false);
+    if (blocker.boardId !== blocked.boardId) {
+      throw badRequest("Both tasks must be on the same board");
+    }
+
+    await assertNoDependencyCycle(db, id, blockerId);
+
+    // Re-adding an existing edge is a no-op rather than an error; the user's
+    // intent is already satisfied.
+    await db
+      .insert(taskDependencies)
+      .values({ blockerId, blockedId: id })
+      .onConflictDoNothing();
+
+    return c.json({ blocker: serialize(blocker) }, 201);
+  }
+);
+
+router.delete(
+  "/:id/dependencies/:blockerId",
+  zValidator("param", idParamSchema.extend({ blockerId: z.string().uuid() })),
+  async (c) => {
+    const db = c.get("db");
+    const { id, blockerId } = c.req.valid("param");
+    await loadTask(db, id, c.get("user").id, true);
+
+    await db
+      .delete(taskDependencies)
+      .where(
+        and(eq(taskDependencies.blockedId, id), eq(taskDependencies.blockerId, blockerId))
+      );
+
+    return c.body(null, 204);
+  }
+);
+
 router.get("/:id/activity", zValidator("param", idParamSchema), async (c) => {
   const db = c.get("db");
   const { id } = c.req.valid("param");
@@ -410,3 +570,31 @@ async function assertNoParentCycle(
 }
 
 export default router;
+
+/**
+ * Refuses a dependency edge that would close a loop.
+ *
+ * Walks the chain of things `blockerId` is itself waiting on. If `taskId`
+ * appears there, adding this edge would make the two tasks wait on each other
+ * and nothing in the cycle could ever be started.
+ */
+async function assertNoDependencyCycle(
+  db: Database,
+  taskId: string,
+  blockerId: string
+): Promise<void> {
+  const result = await db.execute(sql`
+    with recursive upstream as (
+      select blocker_id from task_dependencies where blocked_id = ${blockerId}
+      union
+      select d.blocker_id
+        from task_dependencies d
+        join upstream u on d.blocked_id = u.blocker_id
+    )
+    select 1 as hit from upstream where blocker_id = ${taskId} limit 1
+  `);
+  const rows = (Array.isArray(result) ? result : (result as { rows: unknown[] }).rows) ?? [];
+  if (rows.length > 0) {
+    throw conflict("That would make the two tasks wait on each other");
+  }
+}

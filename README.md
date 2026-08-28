@@ -20,15 +20,16 @@ That's the whole setup. There is no database to install — see
 
 ## What it does
 
-|                               |                                                                                                                                                 |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Real-time**                 | Moves, edits and deletions stream to every client on the board over server-sent events, with presence avatars. No polling, no refresh.          |
-| **Optimistic with real undo** | Changes apply instantly and roll back if the server rejects them. Every action raises a toast carrying a genuine compensating write.            |
-| **Keyboard-first**            | `Ctrl/Cmd-K` opens a command palette that searches tasks and runs commands. Cards lift and reorder from the keyboard alone.                     |
-| **Task detail**               | A side panel with inline editing, subtasks, and a readable history of every change, built from the append-only activity log.                    |
-| **Analytics**                 | Status, priority, 14-day throughput and work-ageing, each with a table view. All derived from the board — there is no separate reporting store. |
-| **Guided first run**          | Auri, a small ambient guide, watches the board and speaks only when it helps. Always dismissible.                                               |
-| **Scales past the demo**      | Columns virtualise above 40 cards; ordering uses fractional indices so a drag writes one row.                                                   |
+|                               |                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Real-time**                 | Moves, edits and deletions stream to every client on the board over server-sent events, with presence avatars. No polling, no refresh.                  |
+| **Optimistic with real undo** | Changes apply instantly and roll back if the server rejects them. Every action raises a toast carrying a genuine compensating write.                    |
+| **Keyboard-first**            | `Ctrl/Cmd-K` opens a command palette that searches tasks and runs commands. Cards lift and reorder from the keyboard alone.                             |
+| **Task detail**               | A side panel with inline editing, subtasks, dependencies, and a readable history of every change, built from the append-only activity log.              |
+| **Import and export**         | JSON and CSV, with a preview that reports bad rows before anything is written. The CSV parser is hand-rolled and tested rather than a 400KB dependency. |
+| **Analytics**                 | Status, priority, 14-day throughput and work-ageing, each with a table view. All derived from the board — there is no separate reporting store.         |
+| **Guided first run**          | Auri, a small ambient guide, watches the board and speaks only when it helps. Always dismissible.                                                       |
+| **Scales past the demo**      | Columns virtualise above 40 cards; ordering uses fractional indices so a drag writes one row.                                                           |
 
 ## Stack
 
@@ -56,7 +57,7 @@ every site that needs updating.
 
 ## Engineering notes
 
-Six things in here were interesting to build.
+Seven things in here were interesting to build.
 
 ### Dates that sort
 
@@ -119,6 +120,18 @@ Deleting and restoring reuses the original task id, so the card returns to its
 original position rather than the end of the column. Undo handlers live in a
 registry outside Redux, because reducers have to stay serialisable.
 
+### A CSV parser rather than a CSV dependency
+
+v1 shipped `xlsx` — 400KB, and a long run of security advisories — to write one
+spreadsheet. Import and export here are about 200 lines in the shared package,
+handling the three things a naive `split(",")` gets wrong: quoted commas,
+escaped quotes, and newlines inside a cell. Excel's byte-order mark too.
+
+Import previews before it writes, and is forgiving about everything except a
+missing title — an unrecognised status is imported as "To do" with a note
+rather than losing the row. v1 accepted unparseable dates silently and then
+rendered `NaN-NaN-NaN` on the card.
+
 ### An onboarding engine, not a scripted tour
 
 Auri is a state machine over live board state. Each step declares a predicate;
@@ -136,7 +149,7 @@ Replay it any time with `?tour=reset`.
 
 ## Testing
 
-**260 tests.** 192 unit and integration, 68 end-to-end across desktop and mobile
+**335 tests.** 244 unit and integration, 91 end-to-end across desktop and mobile
 viewports.
 
 ```
@@ -236,5 +249,6 @@ every variable and what it does.
   It's deliberately narrow enough that this is a change to one file.
 - **One board per user.** The schema supports many, including membership roles;
   the UI only surfaces the first.
-- **Dependencies** are modelled and enforced in the API — including cycle
-  rejection — but not yet exposed in the interface. Subtasks are.
+- **Recurring tasks and saved filter views** are not built. Filters live in
+  the URL-free UI state, so saving one is a small addition rather than a
+  redesign.

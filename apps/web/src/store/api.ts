@@ -84,7 +84,7 @@ function isAuthEndpoint(args: string | FetchArgs): boolean {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Task", "Board", "Session", "Activity"],
+  tagTypes: ["Task", "Board", "Session", "Activity", "Dependency"],
   endpoints: (builder) => ({
     getSession: builder.query<{ user: PublicUser; boards: BoardSummary[] }, void>({
       query: () => "/auth/me",
@@ -240,6 +240,14 @@ export const api = createApi({
       },
     }),
 
+    bulkCreateTasks: builder.mutation<Task[], { boardId: string; tasks: CreateTaskInput[] }>({
+      query: (body) => ({ url: "/tasks/bulk-create", method: "POST", body }),
+      transformResponse: (response: { tasks: Task[] }) => response.tasks,
+      // No optimistic insert: an import can be hundreds of rows, and the
+      // server assigns their positions. Invalidating refetches the board once.
+      invalidatesTags: [{ type: "Task", id: "LIST" }],
+    }),
+
     bulkDeleteTasks: builder.mutation<{ deleted: number }, { ids: string[]; boardId: string }>({
       query: ({ ids }) => ({ url: "/tasks/bulk-delete", method: "POST", body: { ids } }),
       async onQueryStarted({ ids, boardId }, { dispatch, queryFulfilled }) {
@@ -255,6 +263,34 @@ export const api = createApi({
           patch.undo();
         }
       },
+    }),
+
+    getTaskDependencies: builder.query<{ blockedBy: Task[]; blocking: Task[] }, string>({
+      query: (taskId) => `/tasks/${taskId}/dependencies`,
+      providesTags: (_r, _e, taskId) => [{ type: "Dependency", id: taskId }],
+    }),
+
+    addDependency: builder.mutation<void, { taskId: string; blockerId: string }>({
+      query: ({ taskId, blockerId }) => ({
+        url: `/tasks/${taskId}/dependencies`,
+        method: "POST",
+        body: { blockerId },
+      }),
+      invalidatesTags: (_r, _e, arg) => [
+        { type: "Dependency", id: arg.taskId },
+        { type: "Dependency", id: arg.blockerId },
+      ],
+    }),
+
+    removeDependency: builder.mutation<void, { taskId: string; blockerId: string }>({
+      query: ({ taskId, blockerId }) => ({
+        url: `/tasks/${taskId}/dependencies/${blockerId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, arg) => [
+        { type: "Dependency", id: arg.taskId },
+        { type: "Dependency", id: arg.blockerId },
+      ],
     }),
 
     getTaskActivity: builder.query<Activity[], string>({
@@ -299,6 +335,10 @@ export const {
   useUpdateTaskMutation,
   useDeleteTaskMutation,
   useBulkUpdateTasksMutation,
+  useBulkCreateTasksMutation,
   useBulkDeleteTasksMutation,
+  useGetTaskDependenciesQuery,
+  useAddDependencyMutation,
+  useRemoveDependencyMutation,
   useGetTaskActivityQuery,
 } = api;

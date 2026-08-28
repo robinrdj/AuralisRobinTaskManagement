@@ -26,11 +26,14 @@ import { FilterBar } from "./FilterBar";
 import { SelectionBar } from "./SelectionBar";
 import { TaskComposer } from "./TaskComposer";
 import { TaskDetailPanel } from "./TaskDetailPanel";
+import { ImportExport } from "./ImportExport";
+import { ShortcutsHelp } from "@/components/ShortcutsHelp";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Button, EmptyState, Skeleton } from "@/components/ui/primitives";
 import { AuriGuide } from "@/tour/AuriGuide";
 import { buildSampleTasks, SAMPLE_TASK_COUNT } from "./sampleTasks";
 
-export function BoardPage({ boardId }: { boardId: string }) {
+export function BoardPage({ boardId, boardName }: { boardId: string; boardName: string }) {
   const dispatch = useAppDispatch();
   const { data: tasks = [], isLoading } = useGetTasksQuery(boardId);
   const { data: memberData } = useGetBoardMembersQuery(boardId);
@@ -40,6 +43,7 @@ export function BoardPage({ boardId }: { boardId: string }) {
   const { filters, sortBy, sortDirection, selectedIds, selectionMode, inspectedTaskId } =
     useAppSelector((state) => state.ui);
   const [draggingTask, setDraggingTask] = useState<Task | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [composerStatus, setComposerStatus] = useState<TaskStatus | null>(null);
 
   // The command palette can ask for the composer from any route. The counter
@@ -124,6 +128,42 @@ export function BoardPage({ boardId }: { boardId: string }) {
     await actions.createMany(buildSampleTasks(), `Added ${SAMPLE_TASK_COUNT} sample tasks`);
   }, [actions]);
 
+  /**
+   * The card the keyboard is currently on.
+   *
+   * Read from the DOM rather than mirrored in state: dnd-kit already manages
+   * focus on the card activators, so tracking it separately would give two
+   * sources of truth that drift apart the moment a card moves.
+   */
+  const getFocusedTask = useCallback((): Task | null => {
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement)) return null;
+    const card = active.closest("[data-task-id]");
+    const id = card?.getAttribute("data-task-id");
+    return id ? (tasks.find((task) => task.id === id) ?? null) : null;
+  }, [tasks]);
+
+  const shortcutHandlers = useMemo(
+    () => ({
+      getFocusedTask,
+      onNewTask: () => setComposerStatus("todo"),
+      onShowHelp: () => setHelpOpen(true),
+      onEscape: () => setHelpOpen(false),
+      onOpenFocused: (task: Task) => dispatch(inspectTask(task.id)),
+      onDeleteFocused: (task: Task) => void actions.remove(task),
+      onMoveFocused: (task: Task, status: TaskStatus) => {
+        const column = columns.find((candidate) => candidate.status === status);
+        const position = resolveDropPosition(column?.tasks ?? [], column?.tasks.length ?? 0);
+        void actions.move(task, status, position);
+      },
+    }),
+    [getFocusedTask, dispatch, actions, columns]
+  );
+
+  // Suspended while a dialog is up, so a key press there does not also act on
+  // the board behind it.
+  useKeyboardShortcuts(shortcutHandlers, !composerStatus && !inspectedTaskId);
+
   if (isLoading) return <BoardSkeleton />;
 
   return (
@@ -134,6 +174,13 @@ export function BoardPage({ boardId }: { boardId: string }) {
         connected={connected}
         presentMembers={present}
         onAddTask={() => setComposerStatus("todo")}
+        importExport={
+          <ImportExport
+            tasks={tasks}
+            boardName={boardName}
+            onImport={(imported) => actions.importTasks(imported)}
+          />
+        }
       />
 
       <AnimatePresence>
@@ -221,12 +268,15 @@ export function BoardPage({ boardId }: { boardId: string }) {
             key={inspectedTask.id}
             task={inspectedTask}
             subtasks={subtasksByParent.get(inspectedTask.id) ?? []}
+            siblings={tasks.filter((entry) => !entry.parentId)}
             members={memberData?.members ?? []}
             actions={actions}
             onClose={() => dispatch(inspectTask(null))}
           />
         )}
       </AnimatePresence>
+
+      {helpOpen && <ShortcutsHelp onClose={() => setHelpOpen(false)} />}
 
       <AuriGuide tasks={tasks} onSeedSamples={() => void seedSamples()} />
     </div>

@@ -456,3 +456,156 @@ describe("the seeded demo board", () => {
     expect(activity.map((entry) => entry.kind)).toContain("task.created");
   });
 });
+
+describe("dependencies", () => {
+  let harness: TestHarness;
+  let owner: Session;
+
+  beforeAll(async () => {
+    harness = await createHarness();
+    owner = await signUp(harness, { name: "Dep Owner" });
+  }, 60_000);
+
+  afterAll(async () => {
+    await harness?.close();
+  });
+
+  async function make(title: string): Promise<Task> {
+    const response = await harness.request("/api/tasks", {
+      method: "POST",
+      session: owner,
+      body: JSON.stringify({ boardId: owner.boardId, title }),
+    });
+    return ((await response.json()) as { task: Task }).task;
+  }
+
+  async function block(blockedId: string, blockerId: string) {
+    return harness.request(`/api/tasks/${blockedId}/dependencies`, {
+      method: "POST",
+      session: owner,
+      body: JSON.stringify({ blockerId }),
+    });
+  }
+
+  it("records what a task is waiting on, in both directions", async () => {
+    const api = await make("Build the API");
+    const ui = await make("Build the UI");
+
+    expect((await block(ui.id, api.id)).status).toBe(201);
+
+    const forward = await harness.request(`/api/tasks/${ui.id}/dependencies`, {
+      session: owner,
+    });
+    const forwardBody = (await forward.json()) as { blockedBy: Task[]; blocking: Task[] };
+    expect(forwardBody.blockedBy.map((task) => task.id)).toEqual([api.id]);
+    expect(forwardBody.blocking).toEqual([]);
+
+    const reverse = await harness.request(`/api/tasks/${api.id}/dependencies`, {
+      session: owner,
+    });
+    const reverseBody = (await reverse.json()) as { blockedBy: Task[]; blocking: Task[] };
+    expect(reverseBody.blocking.map((task) => task.id)).toEqual([ui.id]);
+  });
+
+  it("refuses to let a task block itself", async () => {
+    const task = await make("Self blocker");
+    expect((await block(task.id, task.id)).status).toBe(400);
+  });
+
+  it("refuses a direct cycle", async () => {
+    const a = await make("Cycle A");
+    const b = await make("Cycle B");
+
+    expect((await block(b.id, a.id)).status).toBe(201);
+    // b already waits on a, so a waiting on b would deadlock the pair.
+    expect((await block(a.id, b.id)).status).toBe(409);
+  });
+
+  it("refuses an indirect cycle three tasks long", async () => {
+    const a = await make("Chain A");
+    const b = await make("Chain B");
+    const c = await make("Chain C");
+
+    expect((await block(b.id, a.id)).status).toBe(201);
+    expect((await block(c.id, b.id)).status).toBe(201);
+    // a → b → c, so c blocking a closes the loop.
+    expect((await block(a.id, c.id)).status).toBe(409);
+  });
+
+  it("allows a diamond, which is not a cycle", async () => {
+    const root = await make("Diamond root");
+    const left = await make("Diamond left");
+    const right = await make("Diamond right");
+    const join = await make("Diamond join");
+
+    expect((await block(left.id, root.id)).status).toBe(201);
+    expect((await block(right.id, root.id)).status).toBe(201);
+    expect((await block(join.id, left.id)).status).toBe(201);
+    expect((await block(join.id, right.id)).status).toBe(201);
+  });
+
+  it("treats adding the same edge twice as a no-op", async () => {
+    const a = await make("Idempotent A");
+    const b = await make("Idempotent B");
+
+    expect((await block(b.id, a.id)).status).toBe(201);
+    expect((await block(b.id, a.id)).status).toBe(201);
+
+    const response = await harness.request(`/api/tasks/${b.id}/dependencies`, {
+      session: owner,
+    });
+    const body = (await response.json()) as { blockedBy: Task[] };
+    expect(body.blockedBy).toHaveLength(1);
+  });
+
+  it("removes an edge", async () => {
+    const a = await make("Removable A");
+    const b = await make("Removable B");
+    await block(b.id, a.id);
+
+    const deleted = await harness.request(`/api/tasks/${b.id}/dependencies/${a.id}`, {
+      method: "DELETE",
+      session: owner,
+    });
+    expect(deleted.status).toBe(204);
+
+    const response = await harness.request(`/api/tasks/${b.id}/dependencies`, {
+      session: owner,
+    });
+    expect(((await response.json()) as { blockedBy: Task[] }).blockedBy).toEqual([]);
+  });
+
+  it("refuses to link tasks on different boards", async () => {
+    const mine = await make("Mine");
+    const stranger = await signUp(harness, { name: "Dep Stranger" });
+    const theirsResponse = await harness.request("/api/tasks", {
+      method: "POST",
+      session: stranger,
+      body: JSON.stringify({ boardId: stranger.boardId, title: "Theirs" }),
+    });
+    const theirs = ((await theirsResponse.json()) as { task: Task }).task;
+
+    const response = await block(mine.id, theirs.id);
+    // The blocker is on a board the caller cannot read at all.
+    expect([400, 403]).toContain(response.status);
+  });
+
+  it("drops the edge when a task is deleted", async () => {
+    const a = await make("Doomed blocker");
+    const b = await make("Survivor");
+    await block(b.id, a.id);
+
+    await harness.request(`/api/tasks/${a.id}`, { method: "DELETE", session: owner });
+
+    const response = await harness.request(`/api/tasks/${b.id}/dependencies`, {
+      session: owner,
+    });
+    expect(((await response.json()) as { blockedBy: Task[] }).blockedBy).toEqual([]);
+  });
+
+  it("requires authentication", async () => {
+    const task = await make("Private deps");
+    const response = await harness.request(`/api/tasks/${task.id}/dependencies`);
+    expect(response.status).toBe(401);
+  });
+});

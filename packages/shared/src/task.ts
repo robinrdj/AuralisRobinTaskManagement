@@ -106,3 +106,16 @@ export const taskDependencySchema = z.object({
 });
 
 export type TaskDependency = z.infer<typeof taskDependencySchema>;
+
+/**
+ * Many tasks in one request.
+ *
+ * Import writes a whole file at once; doing that as N create calls is N
+ * round trips and N activity rows fanned out one at a time.
+ */
+export const bulkCreateTasksSchema = z.object({
+  boardId: z.string().uuid(),
+  tasks: z.array(createTaskSchema).min(1).max(1000),
+});
+
+export type BulkCreateTasksInput = z.infer<typeof bulkCreateTasksSchema>;
