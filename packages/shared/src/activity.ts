@@ -68,6 +68,14 @@ export const realtimeMessageSchema = z.discriminatedUnion("type", [
   }),
   /** Sent only to its recipient, on whichever board they are watching. */
   z.object({ type: z.literal("notification.new") }),
+  /** Time was tracked on a task; its totals changed. */
+  z.object({
+    type: z.literal("time.changed"),
+    origin: z.string().nullable(),
+    taskId: z.string().uuid(),
+  }),
+  /** Sent to one person: their running timer started or stopped. */
+  z.object({ type: z.literal("timer.changed") }),
   /** The board's name or membership changed; clients refetch rather than patch. */
   z.object({
     type: z.literal("board.changed"),

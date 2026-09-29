@@ -3,6 +3,7 @@ import {
   type AnyPgColumn,
   boolean,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -126,6 +127,8 @@ export const tasks = pgTable(
      * an existing successor here, so reopening and re-completing it does not
      * put a second copy on the board.
      */
+    /** Expected effort in minutes, compared against tracked time. */
+    estimateMinutes: integer("estimate_minutes"),
     recurrenceSourceId: uuid("recurrence_source_id").references((): AnyPgColumn => tasks.id, {
       onDelete: "set null",
     }),
@@ -231,6 +234,35 @@ export const savedViews = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("saved_views_board_idx").on(table.boardId, table.ownerId)]
+);
+
+/**
+ * Time spent on a task. A row with no `endedAt` is a running timer, and the
+ * partial unique index allows each person only one of those at a time.
+ */
+export const timeEntries = pgTable(
+  "time_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    boardId: uuid("board_id")
+      .notNull()
+      .references(() => boards.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("time_entries_task_idx").on(table.taskId),
+    index("time_entries_board_idx").on(table.boardId, table.startedAt),
+    uniqueIndex("time_entries_one_running_per_user")
+      .on(table.userId)
+      .where(sql`${table.endedAt} is null`),
+  ]
 );
 
 /**

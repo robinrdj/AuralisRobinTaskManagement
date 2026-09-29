@@ -105,6 +105,22 @@ export function useRealtimeBoard(boardId: string | undefined) {
     };
 
     // Sent only to this user, whichever board the connection is watching.
+    const onTimeChanged = (event: MessageEvent<string>) => {
+      const message = parse<{ origin: string | null; taskId: string }>(event.data);
+      if (!message || message.origin === CLIENT_ID) return;
+      dispatch(
+        api.util.invalidateTags([
+          { type: "Time", id: message.taskId },
+          { type: "Time", id: "BOARD" },
+        ])
+      );
+    };
+
+    // Another tab of this person's started or stopped a timer.
+    const onTimerChanged = () => {
+      dispatch(api.util.invalidateTags(["Timer"]));
+    };
+
     const onNotification = () => {
       dispatch(api.util.invalidateTags(["Notification"]));
     };
@@ -123,6 +139,8 @@ export function useRealtimeBoard(boardId: string | undefined) {
     source.addEventListener("labels.changed", onLabelsChanged as EventListener);
     source.addEventListener("comment.changed", onCommentChanged as EventListener);
     source.addEventListener("notification.new", onNotification);
+    source.addEventListener("time.changed", onTimeChanged as EventListener);
+    source.addEventListener("timer.changed", onTimerChanged);
     source.addEventListener("error", onError);
 
     return () => {
@@ -135,6 +153,8 @@ export function useRealtimeBoard(boardId: string | undefined) {
       source.removeEventListener("labels.changed", onLabelsChanged as EventListener);
       source.removeEventListener("comment.changed", onCommentChanged as EventListener);
       source.removeEventListener("notification.new", onNotification);
+      source.removeEventListener("time.changed", onTimeChanged as EventListener);
+      source.removeEventListener("timer.changed", onTimerChanged);
       source.removeEventListener("error", onError);
       source.close();
     };

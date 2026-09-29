@@ -235,6 +235,7 @@ export function useTaskActions(boardId: string | undefined) {
                 assigneeId: task.assigneeId,
                 parentId: task.parentId,
                 recurrence: task.recurrence ?? null,
+                estimateMinutes: task.estimateMinutes ?? null,
                 position: task.position,
               }).unwrap();
               await restoreLabels(labels);
@@ -315,6 +316,7 @@ export function useTaskActions(boardId: string | undefined) {
                   assigneeId: task.assigneeId,
                   parentId: task.parentId,
                   recurrence: task.recurrence ?? null,
+                  estimateMinutes: task.estimateMinutes ?? null,
                   position: task.position,
                 }).unwrap();
               }

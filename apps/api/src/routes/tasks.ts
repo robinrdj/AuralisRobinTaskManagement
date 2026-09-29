@@ -39,6 +39,7 @@ function serialize(row: TaskRow): Task {
     position: row.position,
     parentId: row.parentId,
     recurrence: row.recurrence ?? null,
+    estimateMinutes: row.estimateMinutes ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     completedAt: row.completedAt?.toISOString() ?? null,
@@ -179,6 +180,7 @@ router.post("/", zValidator("json", createBodySchema), async (c) => {
         assigneeId: body.assigneeId ?? null,
         parentId: body.parentId ?? null,
         recurrence: body.recurrence ?? null,
+        estimateMinutes: body.estimateMinutes ?? null,
         position,
         completedAt: status === "completed" ? new Date() : null,
       })
@@ -352,6 +354,7 @@ router.post("/bulk-create", zValidator("json", bulkCreateTasksSchema), async (c)
       assigneeId: input.assigneeId ?? null,
       parentId: input.parentId ?? null,
       recurrence: input.recurrence ?? null,
+      estimateMinutes: input.estimateMinutes ?? null,
       position,
       completedAt: status === "completed" ? new Date() : null,
     };

@@ -59,6 +59,7 @@ export async function spawnNextOccurrence(
       parentId: completed.parentId,
       position: positionAfterLast(column.map((row) => row.position)),
       recurrence: completed.recurrence,
+      estimateMinutes: completed.estimateMinutes,
       recurrenceSourceId: completed.id,
     })
     .returning();

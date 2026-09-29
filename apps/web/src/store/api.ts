@@ -6,6 +6,8 @@ import type {
   Label,
   LabelAssignment,
   Notification,
+  RunningTimer,
+  TimeEntry,
   SavedView,
   ViewFilters,
   CreateTaskInput,
@@ -105,6 +107,8 @@ export const api = createApi({
     "Label",
     "View",
     "Notification",
+    "Time",
+    "Timer",
   ],
   endpoints: (builder) => ({
     getSession: builder.query<{ user: PublicUser; boards: BoardSummary[] }, void>({
@@ -563,6 +567,62 @@ export const api = createApi({
       },
     }),
 
+    getTaskTime: builder.query<TimeEntry[], string>({
+      query: (taskId) => `/tasks/${taskId}/time`,
+      transformResponse: (response: { entries: TimeEntry[] }) => response.entries,
+      providesTags: (_r, _e, taskId) => [{ type: "Time", id: taskId }],
+    }),
+
+    getRunningTimer: builder.query<RunningTimer | null, void>({
+      query: () => "/time/running",
+      transformResponse: (response: { entry: RunningTimer | null }) => response.entry,
+      providesTags: ["Timer"],
+    }),
+
+    startTimer: builder.mutation<{ entry: TimeEntry }, { taskId: string }>({
+      query: ({ taskId }) => ({ url: `/tasks/${taskId}/time/start`, method: "POST" }),
+      // Starting a timer can stop one on another task, so every time list refetches.
+      invalidatesTags: ["Timer", "Time"],
+    }),
+
+    stopTimer: builder.mutation<{ entry: TimeEntry | null }, void>({
+      query: () => ({ url: "/time/stop", method: "POST" }),
+      invalidatesTags: ["Timer", "Time"],
+    }),
+
+    addTime: builder.mutation<
+      { entry: TimeEntry },
+      { taskId: string; minutes: number; date?: string; note?: string }
+    >({
+      query: ({ taskId, ...body }) => ({ url: `/tasks/${taskId}/time`, method: "POST", body }),
+      invalidatesTags: (_r, _e, arg) => [
+        { type: "Time", id: arg.taskId },
+        { type: "Time", id: "BOARD" },
+      ],
+    }),
+
+    deleteTime: builder.mutation<void, { taskId: string; entryId: string }>({
+      query: ({ taskId, entryId }) => ({
+        url: `/tasks/${taskId}/time/${entryId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, arg) => [
+        { type: "Time", id: arg.taskId },
+        { type: "Time", id: "BOARD" },
+      ],
+    }),
+
+    getBoardTime: builder.query<
+      {
+        byTask: { taskId: string; seconds: number }[];
+        byPerson: { userId: string | null; name: string; seconds: number }[];
+      },
+      string
+    >({
+      query: (boardId) => `/boards/${boardId}/time`,
+      providesTags: [{ type: "Time", id: "BOARD" }],
+    }),
+
     getTaskActivity: builder.query<Activity[], string>({
       query: (taskId) => `/tasks/${taskId}/activity`,
       transformResponse: (response: { activity: Activity[] }) => response.activity,
@@ -588,6 +648,7 @@ function buildOptimisticTask(input: CreateTaskInput & { boardId: string }): Task
     position: input.position ?? "zzzz",
     parentId: input.parentId ?? null,
     recurrence: input.recurrence ?? null,
+    estimateMinutes: input.estimateMinutes ?? null,
     createdAt: now,
     updatedAt: now,
     completedAt: status === "completed" ? now : null,
@@ -634,4 +695,11 @@ export const {
   useDeleteViewMutation,
   useGetNotificationsQuery,
   useMarkNotificationsReadMutation,
+  useGetTaskTimeQuery,
+  useGetRunningTimerQuery,
+  useStartTimerMutation,
+  useStopTimerMutation,
+  useAddTimeMutation,
+  useDeleteTimeMutation,
+  useGetBoardTimeQuery,
 } = api;

@@ -19,6 +19,7 @@ import { Button, Skeleton } from "@/components/ui/primitives";
 import { describeActivity, formatRelativeTime } from "./activityText";
 import { Dependencies } from "./Dependencies";
 import { Comments } from "./Comments";
+import { TimeTracking } from "./TimeTracking";
 import { LabelPicker } from "./LabelPicker";
 import type { useTaskActions } from "@/hooks/useTaskActions";
 
@@ -289,6 +290,14 @@ export function TaskDetailPanel({
               {dependencyError}
             </p>
           )}
+
+          <TimeTracking
+            task={task}
+            currentUserId={session?.user.id}
+            isOwner={isBoardOwner}
+            readOnly={readOnly}
+            actions={actions}
+          />
 
           <Comments
             taskId={task.id}

@@ -56,6 +56,8 @@ export const taskSchema = z.object({
    * before recurring tasks existed (fixtures, old exports) remain valid.
    */
   recurrence: taskRecurrenceSchema.nullable().optional(),
+  /** Expected effort in minutes, for comparing against tracked time. Optional, as above. */
+  estimateMinutes: z.number().int().min(1).max(1_000_000).nullable().optional(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
   completedAt: isoDateTimeSchema.nullable(),
@@ -72,6 +74,7 @@ export const createTaskSchema = taskSchema
     parentId: z.string().uuid().nullable().optional(),
     position: z.string().optional(),
     recurrence: taskRecurrenceSchema.nullable().optional(),
+    estimateMinutes: z.number().int().min(1).max(1_000_000).nullable().optional(),
     /** Client-generated so optimistic inserts keep their identity after the server responds. */
     id: z.string().uuid().optional(),
   });
@@ -90,6 +93,7 @@ export const updateTaskSchema = taskSchema
     position: true,
     parentId: true,
     recurrence: true,
+    estimateMinutes: true,
   })
   .partial();
 

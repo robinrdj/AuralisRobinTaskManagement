@@ -1,5 +1,6 @@
 import {
   formatDate,
+  formatDuration,
   RECURRENCE_LABELS,
   type Activity,
   type ActivityKind,
@@ -27,6 +28,7 @@ const FIELD_LABELS: Record<string, string> = {
   parentId: "parent task",
   labels: "labels",
   recurrence: "repeat",
+  estimateMinutes: "estimate",
 };
 
 interface Change {
@@ -52,6 +54,8 @@ function renderValue(field: string, value: unknown): string {
       return formatDate(String(value));
     case "recurrence":
       return RECURRENCE_LABELS[value as TaskRecurrence] ?? String(value);
+    case "estimateMinutes":
+      return formatDuration(Number(value) * 60);
     default:
       return String(value);
   }

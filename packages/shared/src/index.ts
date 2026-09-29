@@ -9,3 +9,4 @@ export * from "./label.js";
 export * from "./recurrence.js";
 export * from "./view.js";
 export * from "./notification.js";
+export * from "./time.js";

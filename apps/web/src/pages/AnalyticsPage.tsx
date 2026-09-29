@@ -17,6 +17,7 @@ import { useGetTasksQuery } from "@/store/api";
 import { Card, EmptyState, Skeleton } from "@/components/ui/primitives";
 import { cx } from "@/components/ui/labels";
 import { ageing, headline, priorityBreakdown, statusBreakdown, throughput } from "./analytics";
+import { TimeReport } from "./TimeReport";
 
 /**
  * Four charts and a row of headline figures.
@@ -97,6 +98,8 @@ export function AnalyticsPage({ boardId }: { boardId: string }) {
             <AgeingChart tasks={tasks} />
           </ChartCard>
         </div>
+
+        <TimeReport boardId={boardId} tasks={tasks} />
 
         <OverdueList tasks={tasks} />
       </div>
