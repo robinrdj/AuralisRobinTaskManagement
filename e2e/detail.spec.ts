@@ -10,6 +10,19 @@ import { test, expect, type Page } from "@playwright/test";
 const SEEDED_CARD = "Audit colour contrast in dark mode";
 
 /**
+ * Turns the guide's tips off. A tip stays until dismissed and can sit over
+ * the card a test wants to click, which is not what these tests are about.
+ */
+async function dismissTips(page: Page) {
+  await page
+    .getByRole("button", { name: /turn off tips/i })
+    .click({ timeout: 3_000 })
+    .catch(() => {
+      // No tip showing; nothing to dismiss.
+    });
+}
+
+/**
  * Opens a known seeded card rather than "the first one".
  *
  * Which card sorts first can shift as the board renders, so naming the card
@@ -23,6 +36,7 @@ async function openCard(page: Page, title = SEEDED_CARD) {
     .poll(() => page.getByRole("article").count(), { timeout: 20_000 })
     .toBeGreaterThan(5);
 
+  await dismissTips(page);
   await page.getByRole("heading", { name: title, exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   return title;

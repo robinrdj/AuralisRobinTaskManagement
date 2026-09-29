@@ -4,6 +4,19 @@ import { writeFile, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
 /**
+ * Turns the guide's tips off. A tip stays until dismissed and can sit over
+ * the card a test wants to click, which is not what these tests are about.
+ */
+async function dismissTips(page: Page) {
+  await page
+    .getByRole("button", { name: /turn off tips/i })
+    .click({ timeout: 3_000 })
+    .catch(() => {
+      // No tip showing; nothing to dismiss.
+    });
+}
+
+/**
  * Export, import, keyboard shortcuts and dependencies.
  *
  * Export and import existed in v1 and were lost in the rewrite, so these guard
@@ -204,6 +217,7 @@ test.describe("keyboard shortcuts", () => {
 test.describe("dependencies", () => {
   test("records what a task waits on and warns about it", async ({ page }) => {
     await startDemo(page);
+    await dismissTips(page);
 
     await page
       .getByRole("heading", { name: "Audit colour contrast in dark mode", exact: true })
@@ -222,6 +236,7 @@ test.describe("dependencies", () => {
     page,
   }) => {
     await startDemo(page);
+    await dismissTips(page);
 
     await page
       .getByRole("heading", { name: "Audit colour contrast in dark mode", exact: true })
