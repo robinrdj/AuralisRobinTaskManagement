@@ -7,6 +7,8 @@ interface Subscriber {
   name: string;
   color: string;
   send: (message: RealtimeMessage) => void;
+  /** Ends the connection from the server side. */
+  close?: () => void;
 }
 
 /**
@@ -52,6 +54,37 @@ export class RealtimeHub {
       } catch (err) {
         console.error("[realtime] delivery failed", { subscriber: subscriber.id, err });
       }
+    }
+  }
+
+  /**
+   * Delivers to every connection a user holds, on whichever board it is
+   * watching. Notifications use this: they belong to a person, not a board.
+   */
+  publishToUser(userId: string, message: RealtimeMessage): void {
+    for (const board of this.#byBoard.values()) {
+      for (const subscriber of board.values()) {
+        if (subscriber.userId !== userId) continue;
+        try {
+          subscriber.send(message);
+        } catch (err) {
+          console.error("[realtime] delivery failed", { subscriber: subscriber.id, err });
+        }
+      }
+    }
+  }
+
+  /** Ends one user's connections to a board, after they are removed from it. */
+  disconnectUser(boardId: string, userId: string): void {
+    for (const subscriber of [...(this.#byBoard.get(boardId)?.values() ?? [])]) {
+      if (subscriber.userId === userId) subscriber.close?.();
+    }
+  }
+
+  /** Ends every connection to a board that no longer exists. */
+  disconnectBoard(boardId: string): void {
+    for (const subscriber of [...(this.#byBoard.get(boardId)?.values() ?? [])]) {
+      subscriber.close?.();
     }
   }
 

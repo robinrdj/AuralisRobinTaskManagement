@@ -4,7 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { TASK_PRIORITIES, TASK_STATUSES, type Task } from "@auralis/shared";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { clearFilters, inspectTask, setCommandPaletteOpen, setFilters } from "@/store/uiSlice";
+import {
+  clearFilters,
+  inspectTask,
+  setActiveBoard,
+  setCommandPaletteOpen,
+  setFilters,
+} from "@/store/uiSlice";
+import type { BoardSummary } from "@/store/api";
 import { recordCommandPaletteUse } from "@/store/tourSlice";
 import { useTheme } from "@/hooks/useTheme";
 import { PRIORITY_LABELS, STATUS_LABELS } from "./ui/labels";
@@ -17,7 +24,17 @@ import { PRIORITY_LABELS, STATUS_LABELS } from "./ui/labels";
  * phase means it works from inside inputs too, where a bubbling listener would
  * be swallowed.
  */
-export function CommandPalette({ tasks, onNewTask }: { tasks: Task[]; onNewTask: () => void }) {
+export function CommandPalette({
+  tasks,
+  boards = [],
+  activeBoardId,
+  onNewTask,
+}: {
+  tasks: Task[];
+  boards?: BoardSummary[];
+  activeBoardId?: string;
+  onNewTask: () => void;
+}) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { cycleTheme } = useTheme();
@@ -121,6 +138,27 @@ export function CommandPalette({ tasks, onNewTask }: { tasks: Task[]; onNewTask:
                     Clear all filters
                   </Item>
                 </Group>
+
+                {boards.length > 1 && (
+                  <Group heading="Switch board">
+                    {boards
+                      .filter((board) => board.id !== activeBoardId)
+                      .map((board) => (
+                        <Item
+                          key={board.id}
+                          value={`board ${board.name}`}
+                          onSelect={() =>
+                            run(() => {
+                              dispatch(setActiveBoard(board.id));
+                              navigate("/board");
+                            })
+                          }
+                        >
+                          Open board "{board.name}"
+                        </Item>
+                      ))}
+                  </Group>
+                )}
 
                 <Group heading="Filter by status">
                   {TASK_STATUSES.map((status) => (

@@ -16,7 +16,8 @@ export interface TaskColumnProps {
   membersById: Map<string, { name: string; color: string }>;
   onToggleSelect: (id: string) => void;
   onOpen: (id: string) => void;
-  onAddTask: (status: TaskStatus) => void;
+  /** Omitted on a read-only board, which hides the add button. */
+  onAddTask?: (status: TaskStatus) => void;
 }
 
 /**
@@ -67,21 +68,23 @@ export function TaskColumn({
           {filtered ? `${tasks.length} of ${totalCount}` : tasks.length}
         </span>
 
-        <button
-          type="button"
-          onClick={() => onAddTask(status)}
-          className="ml-auto flex h-6 w-6 items-center justify-center rounded-[var(--radius-control)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
-          aria-label={`Add a task to ${STATUS_LABELS[status]}`}
-        >
-          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-            <path
-              d="M8 3v10M3 8h10"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
+        {onAddTask && (
+          <button
+            type="button"
+            onClick={() => onAddTask(status)}
+            className="ml-auto flex h-6 w-6 items-center justify-center rounded-[var(--radius-control)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+            aria-label={`Add a task to ${STATUS_LABELS[status]}`}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M8 3v10M3 8h10"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        )}
       </header>
 
       {/* A subtle progress bar of how much of this column is done. */}

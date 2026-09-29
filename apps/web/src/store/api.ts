@@ -19,14 +19,18 @@ export const CLIENT_ID = crypto.randomUUID();
 export interface BoardSummary {
   id: string;
   name: string;
-  role: "owner" | "editor" | "viewer";
+  role: BoardRole;
 }
+
+export type BoardRole = "owner" | "editor" | "viewer";
 
 export interface BoardMember {
   userId: string;
   name: string;
   color: string;
-  role: string;
+  role: BoardRole;
+  /** Null for guest accounts, whose address is a generated placeholder. */
+  email?: string | null;
 }
 
 const rawBaseQuery = fetchBaseQuery({
@@ -118,6 +122,57 @@ export const api = createApi({
     getBoardMembers: builder.query<{ members: BoardMember[] }, string>({
       query: (boardId) => `/boards/${boardId}/members`,
       providesTags: ["Board"],
+    }),
+
+    createBoard: builder.mutation<{ board: BoardSummary }, { name: string }>({
+      query: (body) => ({ url: "/boards", method: "POST", body }),
+      invalidatesTags: ["Board"],
+    }),
+
+    renameBoard: builder.mutation<void, { boardId: string; name: string }>({
+      query: ({ boardId, name }) => ({
+        url: `/boards/${boardId}`,
+        method: "PATCH",
+        body: { name },
+      }),
+      invalidatesTags: ["Board"],
+    }),
+
+    deleteBoard: builder.mutation<void, string>({
+      query: (boardId) => ({ url: `/boards/${boardId}`, method: "DELETE" }),
+      invalidatesTags: ["Board"],
+    }),
+
+    inviteMember: builder.mutation<
+      { member: BoardMember },
+      { boardId: string; email: string; role: "editor" | "viewer" }
+    >({
+      query: ({ boardId, ...body }) => ({
+        url: `/boards/${boardId}/members`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Board"],
+    }),
+
+    updateMemberRole: builder.mutation<
+      void,
+      { boardId: string; userId: string; role: "editor" | "viewer" }
+    >({
+      query: ({ boardId, userId, role }) => ({
+        url: `/boards/${boardId}/members/${userId}`,
+        method: "PATCH",
+        body: { role },
+      }),
+      invalidatesTags: ["Board"],
+    }),
+
+    removeMember: builder.mutation<void, { boardId: string; userId: string }>({
+      query: ({ boardId, userId }) => ({
+        url: `/boards/${boardId}/members/${userId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Board"],
     }),
 
     getTasks: builder.query<Task[], string>({
@@ -331,6 +386,12 @@ export const {
   useStartGuestSessionMutation,
   useLogoutMutation,
   useGetBoardMembersQuery,
+  useCreateBoardMutation,
+  useRenameBoardMutation,
+  useDeleteBoardMutation,
+  useInviteMemberMutation,
+  useUpdateMemberRoleMutation,
+  useRemoveMemberMutation,
   useGetTasksQuery,
   useCreateTaskMutation,
   useUpdateTaskMutation,

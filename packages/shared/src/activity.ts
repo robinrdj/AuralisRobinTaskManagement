@@ -48,6 +48,11 @@ export const realtimeMessageSchema = z.discriminatedUnion("type", [
     origin: z.string().nullable(),
     taskId: z.string().uuid(),
   }),
+  /** The board's name or membership changed; clients refetch rather than patch. */
+  z.object({
+    type: z.literal("board.changed"),
+    boardId: z.string().uuid(),
+  }),
   z.object({
     type: z.literal("presence"),
     members: z.array(

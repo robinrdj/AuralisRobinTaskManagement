@@ -33,7 +33,16 @@ import { Button, EmptyState, Skeleton } from "@/components/ui/primitives";
 import { AuriGuide } from "@/tour/AuriGuide";
 import { buildSampleTasks, SAMPLE_TASK_COUNT } from "./sampleTasks";
 
-export function BoardPage({ boardId, boardName }: { boardId: string; boardName: string }) {
+export function BoardPage({
+  boardId,
+  boardName,
+  readOnly = false,
+}: {
+  boardId: string;
+  boardName: string;
+  /** A viewer can look but not change anything; the server refuses writes regardless. */
+  readOnly?: boolean;
+}) {
   const dispatch = useAppDispatch();
   const { data: tasks = [], isLoading } = useGetTasksQuery(boardId);
   const { data: memberData } = useGetBoardMembersQuery(boardId);
@@ -50,8 +59,8 @@ export function BoardPage({ boardId, boardName }: { boardId: string; boardName: 
   // changes on every request, so two requests in a row both register.
   const composeRequest = useAppSelector((state) => state.ui.composeRequest);
   useEffect(() => {
-    if (composeRequest > 0) setComposerStatus("todo");
-  }, [composeRequest]);
+    if (composeRequest > 0 && !readOnly) setComposerStatus("todo");
+  }, [composeRequest, readOnly]);
 
   const columns = useMemo(
     () => buildBoard({ tasks, filters, sortBy, sortDirection }),
@@ -146,18 +155,23 @@ export function BoardPage({ boardId, boardName }: { boardId: string; boardName: 
   const shortcutHandlers = useMemo(
     () => ({
       getFocusedTask,
-      onNewTask: () => setComposerStatus("todo"),
+      onNewTask: () => {
+        if (!readOnly) setComposerStatus("todo");
+      },
       onShowHelp: () => setHelpOpen(true),
       onEscape: () => setHelpOpen(false),
       onOpenFocused: (task: Task) => dispatch(inspectTask(task.id)),
-      onDeleteFocused: (task: Task) => void actions.remove(task),
+      onDeleteFocused: (task: Task) => {
+        if (!readOnly) void actions.remove(task);
+      },
       onMoveFocused: (task: Task, status: TaskStatus) => {
+        if (readOnly) return;
         const column = columns.find((candidate) => candidate.status === status);
         const position = resolveDropPosition(column?.tasks ?? [], column?.tasks.length ?? 0);
         void actions.move(task, status, position);
       },
     }),
-    [getFocusedTask, dispatch, actions, columns]
+    [getFocusedTask, dispatch, actions, columns, readOnly]
   );
 
   // Suspended while a dialog is up, so a key press there does not also act on
@@ -173,15 +187,24 @@ export function BoardPage({ boardId, boardName }: { boardId: string; boardName: 
         members={memberData?.members ?? []}
         connected={connected}
         presentMembers={present}
+        readOnly={readOnly}
         onAddTask={() => setComposerStatus("todo")}
         importExport={
-          <ImportExport
-            tasks={tasks}
-            boardName={boardName}
-            onImport={(imported) => actions.importTasks(imported)}
-          />
+          readOnly ? undefined : (
+            <ImportExport
+              tasks={tasks}
+              boardName={boardName}
+              onImport={(imported) => actions.importTasks(imported)}
+            />
+          )
         }
       />
+
+      {readOnly && (
+        <p className="mx-4 mt-3 rounded-[var(--radius-control)] bg-[var(--surface-hover)] px-3 py-2 text-xs text-[var(--text-secondary)] md:mx-6">
+          You have view-only access to this board. Ask the owner if you need to make changes.
+        </p>
+      )}
 
       <AnimatePresence>
         {selectionMode && selectedTasks.length > 0 && (
@@ -199,20 +222,27 @@ export function BoardPage({ boardId, boardName }: { boardId: string; boardName: 
 
       {tasks.length === 0 ? (
         <EmptyState
-          title="Your board is empty"
-          description="Add a task, or let Auri fill the board with a sample project so you can look around."
+          title={readOnly ? "This board is empty" : "Your board is empty"}
+          description={
+            readOnly
+              ? "Nothing has been added yet."
+              : "Add a task, or let Auri fill the board with a sample project so you can look around."
+          }
           action={
-            <div className="mt-1 flex gap-2">
-              <Button variant="primary" onClick={() => setComposerStatus("todo")}>
-                Add a task
-              </Button>
-              <Button onClick={() => void seedSamples()}>Use sample data</Button>
-            </div>
+            !readOnly && (
+              <div className="mt-1 flex gap-2">
+                <Button variant="primary" onClick={() => setComposerStatus("todo")}>
+                  Add a task
+                </Button>
+                <Button onClick={() => void seedSamples()}>Use sample data</Button>
+              </div>
+            )
           }
         />
       ) : (
         <DndContext
-          sensors={sensors}
+          // No sensors means nothing can be picked up on a read-only board.
+          sensors={readOnly ? [] : sensors}
           collisionDetection={closestCorners}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
@@ -231,7 +261,7 @@ export function BoardPage({ boardId, boardName }: { boardId: string; boardName: 
                 membersById={membersById}
                 onToggleSelect={(id) => dispatch(toggleSelection(id))}
                 onOpen={(id) => dispatch(inspectTask(id))}
-                onAddTask={setComposerStatus}
+                onAddTask={readOnly ? undefined : setComposerStatus}
               />
             ))}
           </div>
@@ -271,6 +301,7 @@ export function BoardPage({ boardId, boardName }: { boardId: string; boardName: 
             siblings={tasks.filter((entry) => !entry.parentId)}
             members={memberData?.members ?? []}
             actions={actions}
+            readOnly={readOnly}
             onClose={() => dispatch(inspectTask(null))}
           />
         )}
@@ -278,7 +309,7 @@ export function BoardPage({ boardId, boardName }: { boardId: string; boardName: 
 
       {helpOpen && <ShortcutsHelp onClose={() => setHelpOpen(false)} />}
 
-      <AuriGuide tasks={tasks} onSeedSamples={() => void seedSamples()} />
+      {!readOnly && <AuriGuide tasks={tasks} onSeedSamples={() => void seedSamples()} />}
     </div>
   );
 }

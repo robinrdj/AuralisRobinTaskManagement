@@ -30,3 +30,12 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
   review: "In review",
   completed: "Done",
 };
+
+/** Pulls the server's message out of an RTK Query error, with a fallback. */
+export function errorMessage(error: unknown, fallback: string): string {
+  if (typeof error === "object" && error !== null && "data" in error) {
+    const data = (error as { data?: { error?: { message?: string } } }).data;
+    if (data?.error?.message) return data.error.message;
+  }
+  return fallback;
+}

@@ -32,6 +32,7 @@ export function TaskDetailPanel({
   siblings,
   members,
   actions,
+  readOnly = false,
   onClose,
 }: {
   task: Task;
@@ -40,6 +41,8 @@ export function TaskDetailPanel({
   siblings: Task[];
   members: BoardMember[];
   actions: Actions;
+  /** Disables every control, for someone with view-only access. */
+  readOnly?: boolean;
   onClose: () => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -101,6 +104,7 @@ export function TaskDetailPanel({
             <InlineText
               value={task.title}
               label="Task title"
+              disabled={readOnly}
               className="text-base font-semibold leading-snug text-[var(--text-primary)]"
               onCommit={(title) => {
                 if (title !== task.title) void actions.update(task, { title });
@@ -128,7 +132,8 @@ export function TaskDetailPanel({
           </button>
         </header>
 
-        <div className="flex flex-1 flex-col gap-5 p-4">
+        {/* A disabled fieldset disables every control inside it in one place. */}
+        <fieldset disabled={readOnly} className="flex min-w-0 flex-1 flex-col gap-5 p-4">
           <section className="grid grid-cols-2 gap-3">
             <Field label="Status" htmlFor="detail-status">
               <select
@@ -283,22 +288,24 @@ export function TaskDetailPanel({
               </ol>
             )}
           </section>
-        </div>
+        </fieldset>
 
-        <footer className="sticky bottom-0 flex justify-end border-t border-[var(--border-subtle)] bg-[var(--surface-base)]/95 px-4 py-3 backdrop-blur">
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => {
-              // Deletion is undoable from its toast, so it does not need a
-              // confirmation dialog in front of it.
-              void actions.remove(task);
-              onClose();
-            }}
-          >
-            Delete task
-          </Button>
-        </footer>
+        {!readOnly && (
+          <footer className="sticky bottom-0 flex justify-end border-t border-[var(--border-subtle)] bg-[var(--surface-base)]/95 px-4 py-3 backdrop-blur">
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                // Deletion is undoable from its toast, so it does not need a
+                // confirmation dialog in front of it.
+                void actions.remove(task);
+                onClose();
+              }}
+            >
+              Delete task
+            </Button>
+          </footer>
+        )}
       </motion.aside>
     </div>
   );
@@ -417,6 +424,7 @@ function InlineText({
   className,
   placeholder,
   multiline = false,
+  disabled = false,
 }: {
   value: string;
   label: string;
@@ -424,6 +432,7 @@ function InlineText({
   className?: string;
   placeholder?: string;
   multiline?: boolean;
+  disabled?: boolean;
 }) {
   const [draft, setDraft] = useState(value);
   const [editing, setEditing] = useState(false);
@@ -447,6 +456,7 @@ function InlineText({
     value: draft,
     "aria-label": label,
     placeholder,
+    disabled,
     onFocus: () => setEditing(true),
     onBlur: commit,
     onKeyDown: (event: React.KeyboardEvent) => {

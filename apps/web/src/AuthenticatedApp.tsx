@@ -2,13 +2,13 @@ import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import type { BoardSummary } from "./store/api";
 import type { PublicUser } from "@auralis/shared";
-import { useGetTasksQuery } from "./store/api";
-import { useAppDispatch } from "./store";
+import { useCreateBoardMutation, useGetTasksQuery } from "./store/api";
+import { useAppDispatch, useAppSelector } from "./store";
 import { requestCompose } from "./store/uiSlice";
 import { AppShell } from "./components/AppShell";
 import { ToastViewport } from "./components/ToastViewport";
 import { CommandPalette } from "./components/CommandPalette";
-import { Spinner } from "./components/ui/primitives";
+import { Button, Spinner } from "./components/ui/primitives";
 
 /**
  * Everything behind the sign-in wall.
@@ -33,25 +33,22 @@ export default function AuthenticatedApp({
 }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const board = boards[0];
+  const activeBoardId = useAppSelector((state) => state.ui.activeBoardId);
+  // A remembered board the user has since left or deleted falls back to the first.
+  const board = boards.find((candidate) => candidate.id === activeBoardId) ?? boards[0];
   const boardId = board?.id;
+  const readOnly = board?.role === "viewer";
 
   // Reads from the cache the board already filled, so the palette can search
   // tasks without issuing a request of its own.
   const { data: tasks = [] } = useGetTasksQuery(boardId ?? "", { skip: !boardId });
 
-  if (!boardId) {
-    return (
-      <div className="flex h-dvh items-center justify-center bg-[var(--surface-sunken)] p-6 text-center">
-        <p className="text-sm text-[var(--text-secondary)]">
-          Your account has no board yet. Reload the page to create one.
-        </p>
-      </div>
-    );
+  if (!board || !boardId) {
+    return <NoBoards />;
   }
 
   return (
-    <AppShell user={user} boards={boards}>
+    <AppShell user={user} boards={boards} activeBoard={board}>
       <Routes>
         <Route path="/" element={<Navigate to="/board" replace />} />
         <Route path="/signin" element={<Navigate to="/board" replace />} />
@@ -60,7 +57,12 @@ export default function AuthenticatedApp({
           path="/board"
           element={
             <Suspense fallback={<RouteSpinner label="Loading board" />}>
-              <BoardPage key={boardId} boardId={boardId} boardName={board?.name ?? "Board"} />
+              <BoardPage
+                key={boardId}
+                boardId={boardId}
+                boardName={board.name}
+                readOnly={readOnly}
+              />
             </Suspense>
           }
         />
@@ -77,6 +79,8 @@ export default function AuthenticatedApp({
 
       <CommandPalette
         tasks={tasks}
+        boards={boards}
+        activeBoardId={boardId}
         onNewTask={() => {
           // The board owns the composer, so creating a task from elsewhere
           // means going there first — one creation path, not two.
@@ -86,6 +90,23 @@ export default function AuthenticatedApp({
       />
       <ToastViewport />
     </AppShell>
+  );
+}
+
+/** Reached only if every board was removed out from under the user. */
+function NoBoards() {
+  const [createBoard, { isLoading }] = useCreateBoardMutation();
+  return (
+    <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-[var(--surface-sunken)] p-6 text-center">
+      <p className="text-sm text-[var(--text-secondary)]">You are not on any boards.</p>
+      <Button
+        variant="primary"
+        disabled={isLoading}
+        onClick={() => void createBoard({ name: "My board" })}
+      >
+        Create a board
+      </Button>
+    </div>
   );
 }
 

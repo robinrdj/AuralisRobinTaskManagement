@@ -8,6 +8,7 @@ import { setCommandPaletteOpen } from "@/store/uiSlice";
 import { Button } from "./ui/primitives";
 import { cx } from "./ui/labels";
 import { AuriSprite } from "@/tour/AuriSprite";
+import { BoardSwitcher } from "./boards/BoardSwitcher";
 
 const NAV_ITEMS = [
   { to: "/board", label: "Board", tour: "nav-board" },
@@ -17,10 +18,12 @@ const NAV_ITEMS = [
 export function AppShell({
   user,
   boards,
+  activeBoard,
   children,
 }: {
   user: PublicUser;
   boards: BoardSummary[];
+  activeBoard: BoardSummary;
   children: ReactNode;
 }) {
   const dispatch = useAppDispatch();
@@ -42,16 +45,12 @@ export function AppShell({
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--border-subtle)] bg-[var(--surface-base)] px-4 md:px-6">
         <NavLink to="/board" className="flex items-center gap-2" aria-label="Task Manager home">
           <AuriSprite mood="idle" size={26} />
-          <span className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
+          <span className="hidden text-base font-semibold tracking-tight text-[var(--text-primary)] sm:inline">
             Task Manager
           </span>
         </NavLink>
 
-        {boards[0] && (
-          <span className="hidden truncate rounded-[var(--radius-pill)] bg-[var(--surface-hover)] px-2 py-0.5 text-xs text-[var(--text-secondary)] sm:inline">
-            {boards[0].name}
-          </span>
-        )}
+        <BoardSwitcher boards={boards} activeBoard={activeBoard} userId={user.id} />
 
         <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Main">
           {NAV_ITEMS.map((item) => (

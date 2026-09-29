@@ -17,6 +17,11 @@ export interface Filters {
 
 export interface UiState {
   theme: ThemePreference;
+  /**
+   * The board being worked on. Null, or an id the user no longer belongs to,
+   * falls back to their first board — so a stale value is harmless.
+   */
+  activeBoardId: string | null;
   filters: Filters;
   sortBy: SortKey;
   sortDirection: "asc" | "desc";
@@ -44,6 +49,7 @@ export const EMPTY_FILTERS: Filters = {
 };
 
 const THEME_KEY = "auralis:theme";
+const BOARD_KEY = "auralis:board";
 
 function readStoredTheme(): ThemePreference {
   try {
@@ -55,8 +61,17 @@ function readStoredTheme(): ThemePreference {
   return "system";
 }
 
+function readStoredBoard(): string | null {
+  try {
+    return localStorage.getItem(BOARD_KEY);
+  } catch {
+    return null;
+  }
+}
+
 const initialState: UiState = {
   theme: readStoredTheme(),
+  activeBoardId: readStoredBoard(),
   filters: EMPTY_FILTERS,
   sortBy: "position",
   sortDirection: "asc",
@@ -73,6 +88,19 @@ const uiSlice = createSlice({
   reducers: {
     setTheme: (state, action: PayloadAction<ThemePreference>) => {
       state.theme = action.payload;
+    },
+
+    /**
+     * Switches boards. Filters, selection and the open panel all refer to
+     * tasks and people on the old board, so they are reset with it.
+     */
+    setActiveBoard: (state, action: PayloadAction<string>) => {
+      if (state.activeBoardId === action.payload) return;
+      state.activeBoardId = action.payload;
+      state.filters = { ...EMPTY_FILTERS };
+      state.selectedIds = [];
+      state.selectionMode = false;
+      state.inspectedTaskId = null;
     },
 
     /** Merges a partial change into the active filters. */
@@ -132,6 +160,7 @@ const uiSlice = createSlice({
 
 export const {
   setTheme,
+  setActiveBoard,
   setFilters,
   clearFilters,
   setSort,
@@ -159,4 +188,4 @@ export function hasActiveFilters(filters: Filters): boolean {
   );
 }
 
-export { THEME_KEY };
+export { THEME_KEY, BOARD_KEY };

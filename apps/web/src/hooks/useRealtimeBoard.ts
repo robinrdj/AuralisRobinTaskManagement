@@ -75,6 +75,11 @@ export function useRealtimeBoard(boardId: string | undefined) {
       if (message) setMembers(message.members);
     };
 
+    // Membership or name changed: cheap to refetch, and rare enough not to patch.
+    const onBoardChanged = () => {
+      dispatch(api.util.invalidateTags(["Board"]));
+    };
+
     const onError = () => {
       // EventSource retries on its own; reflect the outage in the UI meanwhile.
       setConnected(false);
@@ -84,6 +89,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
     source.addEventListener("task.upserted", onUpserted as EventListener);
     source.addEventListener("task.deleted", onDeleted as EventListener);
     source.addEventListener("presence", onPresence as EventListener);
+    source.addEventListener("board.changed", onBoardChanged);
     source.addEventListener("error", onError);
 
     return () => {
@@ -91,6 +97,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
       source.removeEventListener("task.upserted", onUpserted as EventListener);
       source.removeEventListener("task.deleted", onDeleted as EventListener);
       source.removeEventListener("presence", onPresence as EventListener);
+      source.removeEventListener("board.changed", onBoardChanged);
       source.removeEventListener("error", onError);
       source.close();
     };

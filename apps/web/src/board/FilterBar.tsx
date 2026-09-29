@@ -27,6 +27,7 @@ export function FilterBar({
   members,
   connected,
   presentMembers,
+  readOnly = false,
   onAddTask,
   importExport,
 }: {
@@ -34,6 +35,7 @@ export function FilterBar({
   members: BoardMember[];
   connected: boolean;
   presentMembers: PresenceMember[];
+  readOnly?: boolean;
   onAddTask: () => void;
   /** The export/import menu, passed in so the bar stays presentational. */
   importExport?: React.ReactNode;
@@ -137,29 +139,33 @@ export function FilterBar({
           )}
         </Button>
 
-        <Button
-          size="md"
-          variant={selectionMode ? "primary" : "secondary"}
-          aria-pressed={selectionMode}
-          onClick={() => dispatch(setSelectionMode(!selectionMode))}
-        >
-          Select
-        </Button>
+        {!readOnly && (
+          <Button
+            size="md"
+            variant={selectionMode ? "primary" : "secondary"}
+            aria-pressed={selectionMode}
+            onClick={() => dispatch(setSelectionMode(!selectionMode))}
+          >
+            Select
+          </Button>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
           <PresenceStack members={presentMembers} connected={connected} />
           {importExport}
-          <Button size="md" variant="primary" data-tour="new-task" onClick={onAddTask}>
-            <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M8 3v10M3 8h10"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            New task
-          </Button>
+          {!readOnly && (
+            <Button size="md" variant="primary" data-tour="new-task" onClick={onAddTask}>
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                  d="M8 3v10M3 8h10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              New task
+            </Button>
+          )}
         </div>
       </div>
 

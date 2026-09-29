@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { api } from "./api";
-import uiReducer, { THEME_KEY } from "./uiSlice";
+import uiReducer, { BOARD_KEY, THEME_KEY } from "./uiSlice";
 import toastReducer from "./toastSlice";
 import tourReducer, { TOUR_KEY, serialiseTourProgress } from "./tourSlice";
 
@@ -39,9 +39,19 @@ export const store = createStore();
  */
 let lastTheme: string | undefined;
 let lastTourProgress: string | undefined;
+let lastBoard: string | null | undefined;
 
 store.subscribe(() => {
   const state = store.getState();
+
+  if (state.ui.activeBoardId !== lastBoard) {
+    lastBoard = state.ui.activeBoardId;
+    try {
+      if (lastBoard) localStorage.setItem(BOARD_KEY, lastBoard);
+    } catch {
+      // Storage unavailable; the first board is the fallback after a reload.
+    }
+  }
 
   if (state.ui.theme !== lastTheme) {
     lastTheme = state.ui.theme;
