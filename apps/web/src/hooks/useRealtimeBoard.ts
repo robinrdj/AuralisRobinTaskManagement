@@ -104,6 +104,11 @@ export function useRealtimeBoard(boardId: string | undefined) {
       dispatch(api.util.invalidateTags(["Board"]));
     };
 
+    // Sent only to this user, whichever board the connection is watching.
+    const onNotification = () => {
+      dispatch(api.util.invalidateTags(["Notification"]));
+    };
+
     const onError = () => {
       // EventSource retries on its own; reflect the outage in the UI meanwhile.
       setConnected(false);
@@ -117,6 +122,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
     source.addEventListener("views.changed", onViewsChanged as EventListener);
     source.addEventListener("labels.changed", onLabelsChanged as EventListener);
     source.addEventListener("comment.changed", onCommentChanged as EventListener);
+    source.addEventListener("notification.new", onNotification);
     source.addEventListener("error", onError);
 
     return () => {
@@ -128,6 +134,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
       source.removeEventListener("views.changed", onViewsChanged as EventListener);
       source.removeEventListener("labels.changed", onLabelsChanged as EventListener);
       source.removeEventListener("comment.changed", onCommentChanged as EventListener);
+      source.removeEventListener("notification.new", onNotification);
       source.removeEventListener("error", onError);
       source.close();
     };

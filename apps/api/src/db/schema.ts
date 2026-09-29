@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 import {
   ACTIVITY_KINDS,
+  NOTIFICATION_KINDS,
   TASK_PRIORITIES,
   TASK_RECURRENCES,
   TASK_STATUSES,
@@ -230,6 +231,37 @@ export const savedViews = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("saved_views_board_idx").on(table.boardId, table.ownerId)]
+);
+
+/**
+ * Things that happened to a person: an assignment, a mention, an invite.
+ *
+ * `subject` snapshots the task title or board name, so a notification still
+ * reads properly after what it points at is renamed or deleted. `dedupeKey`
+ * makes generated reminders idempotent — the same reminder is never stored
+ * twice for the same person.
+ */
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: NOTIFICATION_KINDS }).notNull(),
+    boardId: uuid("board_id").references(() => boards.id, { onDelete: "cascade" }),
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    actorId: uuid("actor_id").references(() => users.id, { onDelete: "set null" }),
+    subject: text("subject").notNull(),
+    detail: text("detail"),
+    dedupeKey: text("dedupe_key"),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("notifications_user_idx").on(table.userId, table.createdAt),
+    uniqueIndex("notifications_dedupe_unique").on(table.userId, table.dedupeKey),
+  ]
 );
 
 /**

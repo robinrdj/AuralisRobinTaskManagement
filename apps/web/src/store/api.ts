@@ -5,6 +5,7 @@ import type {
   Comment,
   Label,
   LabelAssignment,
+  Notification,
   SavedView,
   ViewFilters,
   CreateTaskInput,
@@ -94,7 +95,17 @@ function isAuthEndpoint(args: string | FetchArgs): boolean {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Task", "Board", "Session", "Activity", "Dependency", "Comment", "Label", "View"],
+  tagTypes: [
+    "Task",
+    "Board",
+    "Session",
+    "Activity",
+    "Dependency",
+    "Comment",
+    "Label",
+    "View",
+    "Notification",
+  ],
   endpoints: (builder) => ({
     getSession: builder.query<{ user: PublicUser; boards: BoardSummary[] }, void>({
       query: () => "/auth/me",
@@ -525,6 +536,33 @@ export const api = createApi({
       invalidatesTags: (_r, _e, arg) => [{ type: "View", id: arg.boardId }],
     }),
 
+    /** Sends the viewer's own calendar day, so "due today" means their today. */
+    getNotifications: builder.query<{ notifications: Notification[]; unread: number }, string>({
+      query: (today) => `/notifications?today=${today}`,
+      providesTags: ["Notification"],
+    }),
+
+    markNotificationsRead: builder.mutation<void, { ids?: string[]; today: string }>({
+      query: ({ ids }) => ({ url: "/notifications/read", method: "POST", body: { ids } }),
+      async onQueryStarted({ ids, today }, { dispatch, queryFulfilled }) {
+        const now = new Date().toISOString();
+        const patch = dispatch(
+          api.util.updateQueryData("getNotifications", today, (draft) => {
+            for (const entry of draft.notifications) {
+              if (entry.readAt || (ids && !ids.includes(entry.id))) continue;
+              entry.readAt = now;
+              draft.unread = Math.max(0, draft.unread - 1);
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+    }),
+
     getTaskActivity: builder.query<Activity[], string>({
       query: (taskId) => `/tasks/${taskId}/activity`,
       transformResponse: (response: { activity: Activity[] }) => response.activity,
@@ -594,4 +632,6 @@ export const {
   useCreateViewMutation,
   useUpdateViewMutation,
   useDeleteViewMutation,
+  useGetNotificationsQuery,
+  useMarkNotificationsReadMutation,
 } = api;

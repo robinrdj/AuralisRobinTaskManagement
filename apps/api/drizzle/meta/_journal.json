@@ -36,6 +36,13 @@
       "when": 1790704630419,
       "tag": "0004_saved_views",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790705734990,
+      "tag": "0005_notifications",
+      "breakpoints": true
     }
   ]
 }

@@ -10,6 +10,7 @@ import { badRequest, conflict, forbidden, notFound } from "../lib/errors.js";
 import { requireAuth } from "../middleware/auth.js";
 import type { AppContext } from "../lib/context.js";
 import type { Database } from "../db/client.js";
+import { notify } from "../lib/notify.js";
 
 const router = new Hono<AppContext>();
 router.use("*", requireAuth);
@@ -211,6 +212,20 @@ router.post(
       .onConflictDoNothing()
       .returning();
     if (inserted.length === 0) throw conflict("They are already on this board");
+
+    const [board] = await db
+      .select({ name: boards.name })
+      .from(boards)
+      .where(eq(boards.id, id));
+    await notify(db, c.get("hub"), [
+      {
+        userId: invitee.id,
+        kind: "board_invite",
+        boardId: id,
+        actorId: inviter.id,
+        subject: board?.name ?? "a board",
+      },
+    ]);
 
     c.get("hub").publish(id, { type: "board.changed", boardId: id });
     return c.json(

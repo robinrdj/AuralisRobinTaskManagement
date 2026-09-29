@@ -66,6 +66,8 @@ export const realtimeMessageSchema = z.discriminatedUnion("type", [
     origin: z.string().nullable(),
     boardId: z.string().uuid(),
   }),
+  /** Sent only to its recipient, on whichever board they are watching. */
+  z.object({ type: z.literal("notification.new") }),
   /** The board's name or membership changed; clients refetch rather than patch. */
   z.object({
     type: z.literal("board.changed"),

@@ -17,6 +17,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { badRequest, conflict, forbidden, notFound } from "../lib/errors.js";
 import { requireAuth } from "../middleware/auth.js";
 import { spawnNextOccurrence } from "../lib/recurrence.js";
+import { assignmentNotices, newlyUnblocked, notify } from "../lib/notify.js";
 import type { AppContext } from "../lib/context.js";
 import type { Database } from "../db/client.js";
 import type { TaskRow } from "../db/schema.js";
@@ -69,6 +70,21 @@ function publishSpawned(
       });
     }
   }
+}
+
+/** "Ready to start" notices for the assignees of newly unblocked tasks. */
+function unblockedNotices(
+  ready: { id: string; title: string; boardId: string; assigneeId: string }[],
+  actorId: string
+) {
+  return ready.map((task) => ({
+    userId: task.assigneeId,
+    kind: "unblocked" as const,
+    boardId: task.boardId,
+    taskId: task.id,
+    actorId,
+    subject: task.title,
+  }));
 }
 
 /**
@@ -185,6 +201,15 @@ router.post("/", zValidator("json", createBodySchema), async (c) => {
     origin: c.get("originId"),
     task: task as unknown as Record<string, unknown>,
   });
+  if (row.assigneeId) {
+    await notify(
+      db,
+      c.get("hub"),
+      await assignmentNotices(db, row.boardId, user.id, [
+        { assigneeId: row.assigneeId, taskId: row.id, title: row.title },
+      ])
+    );
+  }
   return c.json({ task }, 201);
 });
 
@@ -257,6 +282,28 @@ router.patch("/bulk", zValidator("json", bulkUpdateTasksSchema), async (c) => {
     });
   }
   publishSpawned(c, spawned);
+
+  const before = new Map(rows.map((row) => [row.id, row]));
+  const notices = [];
+  for (const boardId of new Set(updated.map((row) => row.boardId))) {
+    const onBoard = updated.filter((row) => row.boardId === boardId);
+    notices.push(
+      ...(await assignmentNotices(
+        db,
+        boardId,
+        user.id,
+        onBoard
+          .filter((row) => row.assigneeId && row.assigneeId !== before.get(row.id)?.assigneeId)
+          .map((row) => ({ assigneeId: row.assigneeId!, taskId: row.id, title: row.title }))
+      ))
+    );
+  }
+  if (updates.status === "completed") {
+    const finished = updated.filter((row) => !wasCompleted.has(row.id)).map((row) => row.id);
+    notices.push(...unblockedNotices(await newlyUnblocked(db, finished), user.id));
+  }
+  await notify(db, c.get("hub"), notices);
+
   return c.json({ tasks: updated.map(serialize) });
 });
 
@@ -458,6 +505,18 @@ router.patch(
       task: task as unknown as Record<string, unknown>,
     });
     if (spawned) publishSpawned(c, [spawned]);
+
+    const notices =
+      row.assigneeId && row.assigneeId !== existing.assigneeId
+        ? await assignmentNotices(db, row.boardId, user.id, [
+            { assigneeId: row.assigneeId, taskId: row.id, title: row.title },
+          ])
+        : [];
+    if (enteringCompleted) {
+      notices.push(...unblockedNotices(await newlyUnblocked(db, [id]), user.id));
+    }
+    await notify(db, c.get("hub"), notices);
+
     return c.json({ task });
   }
 );

@@ -9,6 +9,7 @@ import { Button } from "./ui/primitives";
 import { cx } from "./ui/labels";
 import { AuriSprite } from "@/tour/AuriSprite";
 import { BoardSwitcher } from "./boards/BoardSwitcher";
+import { NotificationBell } from "./NotificationBell";
 
 const NAV_ITEMS = [
   { to: "/board", label: "Board", tour: "nav-board" },
@@ -85,6 +86,8 @@ export function AppShell({
               Ctrl K
             </kbd>
           </button>
+
+          <NotificationBell />
 
           <Button
             iconOnly

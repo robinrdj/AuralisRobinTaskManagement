@@ -8,3 +8,4 @@ export * from "./comment.js";
 export * from "./label.js";
 export * from "./recurrence.js";
 export * from "./view.js";
+export * from "./notification.js";

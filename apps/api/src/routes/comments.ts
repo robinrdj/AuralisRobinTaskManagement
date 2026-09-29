@@ -7,6 +7,7 @@ import { activities, boardMembers, comments, users } from "../db/schema.js";
 import { forbidden, notFound } from "../lib/errors.js";
 import { requireAuth } from "../middleware/auth.js";
 import { assertBoardAccess, loadTask } from "./tasks.js";
+import { notify } from "../lib/notify.js";
 import type { AppContext } from "../lib/context.js";
 import type { Database } from "../db/client.js";
 
@@ -65,6 +66,21 @@ export async function mentionedMembers(
   return rows.map((row) => row.userId);
 }
 
+function mentionNotices(
+  userIds: string[],
+  task: { id: string; boardId: string; title: string },
+  actorId: string
+) {
+  return userIds.map((userId) => ({
+    userId,
+    kind: "mentioned" as const,
+    boardId: task.boardId,
+    taskId: task.id,
+    actorId,
+    subject: task.title,
+  }));
+}
+
 router.get("/:id/comments", requireAuth, zValidator("param", taskParamSchema), async (c) => {
   const db = c.get("db");
   const { id } = c.req.valid("param");
@@ -108,6 +124,8 @@ router.post(
       origin: c.get("originId"),
       taskId: id,
     });
+
+    await notify(db, c.get("hub"), mentionNotices(mentioned, task, user.id));
 
     const [comment] = await listComments(db, eq(comments.id, created.id));
     return c.json({ comment, mentioned }, 201);
@@ -157,6 +175,8 @@ router.patch(
       origin: c.get("originId"),
       taskId: id,
     });
+
+    await notify(db, c.get("hub"), mentionNotices(mentioned, task, user.id));
 
     const [comment] = await listComments(db, eq(comments.id, commentId));
     return c.json({ comment, mentioned });
