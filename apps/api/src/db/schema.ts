@@ -161,6 +161,39 @@ export const activities = pgTable(
   ]
 );
 
+/** A board's own vocabulary of tags. Names are unique per board, ignoring case. */
+export const labels = pgTable(
+  "labels",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    boardId: uuid("board_id")
+      .notNull()
+      .references(() => boards.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("labels_board_name_unique").on(table.boardId, sql`lower(${table.name})`),
+  ]
+);
+
+export const taskLabels = pgTable(
+  "task_labels",
+  {
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    labelId: uuid("label_id")
+      .notNull()
+      .references(() => labels.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.taskId, table.labelId] }),
+    index("task_labels_label_idx").on(table.labelId),
+  ]
+);
+
 /**
  * Discussion on a task. Deleted with the task; an author who deletes their
  * account leaves their comments behind, unattributed.

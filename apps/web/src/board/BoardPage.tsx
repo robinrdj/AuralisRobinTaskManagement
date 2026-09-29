@@ -14,11 +14,12 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { AnimatePresence, motion } from "motion/react";
 import type { Task, TaskStatus } from "@auralis/shared";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { useGetBoardMembersQuery, useGetTasksQuery } from "@/store/api";
+import { useGetBoardMembersQuery, useGetLabelsQuery, useGetTasksQuery } from "@/store/api";
 import { clearSelection, inspectTask, toggleSelection } from "@/store/uiSlice";
 import { useTaskActions } from "@/hooks/useTaskActions";
 import { useRealtimeBoard } from "@/hooks/useRealtimeBoard";
 import { buildBoard, groupSubtasks } from "./boardData";
+import { groupLabels, TaskLabelsContext } from "./boardContext";
 import { resolveDropPosition, resolveDropTarget } from "./dropPosition";
 import { TaskColumn } from "./TaskColumn";
 import { TaskCard } from "./TaskCard";
@@ -46,6 +47,7 @@ export function BoardPage({
   const dispatch = useAppDispatch();
   const { data: tasks = [], isLoading } = useGetTasksQuery(boardId);
   const { data: memberData } = useGetBoardMembersQuery(boardId);
+  const { data: labelData } = useGetLabelsQuery(boardId);
   const { connected, members: present } = useRealtimeBoard(boardId);
   const actions = useTaskActions(boardId);
 
@@ -62,9 +64,15 @@ export function BoardPage({
     if (composeRequest > 0 && !readOnly) setComposerStatus("todo");
   }, [composeRequest, readOnly]);
 
+  const boardLabels = useMemo(() => labelData?.labels ?? [], [labelData]);
+  const labelsByTask = useMemo(
+    () => groupLabels(boardLabels, labelData?.assignments ?? []),
+    [boardLabels, labelData]
+  );
+
   const columns = useMemo(
-    () => buildBoard({ tasks, filters, sortBy, sortDirection }),
-    [tasks, filters, sortBy, sortDirection]
+    () => buildBoard({ tasks, filters, sortBy, sortDirection, labelsByTask }),
+    [tasks, filters, sortBy, sortDirection, labelsByTask]
   );
   const subtasksByParent = useMemo(() => groupSubtasks(tasks), [tasks]);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -181,136 +189,142 @@ export function BoardPage({
   if (isLoading) return <BoardSkeleton />;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <FilterBar
-        boardId={boardId}
-        members={memberData?.members ?? []}
-        connected={connected}
-        presentMembers={present}
-        readOnly={readOnly}
-        onAddTask={() => setComposerStatus("todo")}
-        importExport={
-          readOnly ? undefined : (
-            <ImportExport
-              tasks={tasks}
-              boardName={boardName}
-              onImport={(imported) => actions.importTasks(imported)}
-            />
-          )
-        }
-      />
-
-      {readOnly && (
-        <p className="mx-4 mt-3 rounded-[var(--radius-control)] bg-[var(--surface-hover)] px-3 py-2 text-xs text-[var(--text-secondary)] md:mx-6">
-          You have view-only access to this board. Ask the owner if you need to make changes.
-        </p>
-      )}
-
-      <AnimatePresence>
-        {selectionMode && selectedTasks.length > 0 && (
-          <SelectionBar
-            selected={selectedTasks}
-            onClear={() => dispatch(clearSelection())}
-            onUpdate={(updates) => void actions.updateMany(selectedTasks, updates)}
-            onDelete={() => {
-              void actions.removeMany(selectedTasks);
-              dispatch(clearSelection());
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      {tasks.length === 0 ? (
-        <EmptyState
-          title={readOnly ? "This board is empty" : "Your board is empty"}
-          description={
-            readOnly
-              ? "Nothing has been added yet."
-              : "Add a task, or let Auri fill the board with a sample project so you can look around."
-          }
-          action={
-            !readOnly && (
-              <div className="mt-1 flex gap-2">
-                <Button variant="primary" onClick={() => setComposerStatus("todo")}>
-                  Add a task
-                </Button>
-                <Button onClick={() => void seedSamples()}>Use sample data</Button>
-              </div>
+    <TaskLabelsContext.Provider value={labelsByTask}>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <FilterBar
+          labels={boardLabels}
+          boardId={boardId}
+          members={memberData?.members ?? []}
+          connected={connected}
+          presentMembers={present}
+          readOnly={readOnly}
+          onAddTask={() => setComposerStatus("todo")}
+          importExport={
+            readOnly ? undefined : (
+              <ImportExport
+                tasks={tasks}
+                boardName={boardName}
+                onImport={(imported) => actions.importTasks(imported)}
+              />
             )
           }
         />
-      ) : (
-        <DndContext
-          // No sensors means nothing can be picked up on a read-only board.
-          sensors={readOnly ? [] : sensors}
-          collisionDetection={closestCorners}
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
-          onDragCancel={() => setDraggingTask(null)}
-        >
-          <div className="scrollbar-slim flex min-h-0 flex-1 gap-3 overflow-x-auto px-4 pb-4 md:px-6">
-            {columns.map((column) => (
-              <TaskColumn
-                key={column.status}
-                status={column.status}
-                tasks={column.tasks}
-                totalCount={column.totalCount}
-                selectedIds={selectedSet}
-                selectionMode={selectionMode}
-                subtasksByParent={subtasksByParent}
-                membersById={membersById}
-                onToggleSelect={(id) => dispatch(toggleSelection(id))}
-                onOpen={(id) => dispatch(inspectTask(id))}
-                onAddTask={readOnly ? undefined : setComposerStatus}
-              />
-            ))}
-          </div>
 
-          {/*
+        {readOnly && (
+          <p className="mx-4 mt-3 rounded-[var(--radius-control)] bg-[var(--surface-hover)] px-3 py-2 text-xs text-[var(--text-secondary)] md:mx-6">
+            You have view-only access to this board. Ask the owner if you need to make changes.
+          </p>
+        )}
+
+        <AnimatePresence>
+          {selectionMode && selectedTasks.length > 0 && (
+            <SelectionBar
+              selected={selectedTasks}
+              onClear={() => dispatch(clearSelection())}
+              onUpdate={(updates) => void actions.updateMany(selectedTasks, updates)}
+              onDelete={() => {
+                void actions.removeMany(selectedTasks);
+                dispatch(clearSelection());
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {tasks.length === 0 ? (
+          <EmptyState
+            title={readOnly ? "This board is empty" : "Your board is empty"}
+            description={
+              readOnly
+                ? "Nothing has been added yet."
+                : "Add a task, or let Auri fill the board with a sample project so you can look around."
+            }
+            action={
+              !readOnly && (
+                <div className="mt-1 flex gap-2">
+                  <Button variant="primary" onClick={() => setComposerStatus("todo")}>
+                    Add a task
+                  </Button>
+                  <Button onClick={() => void seedSamples()}>Use sample data</Button>
+                </div>
+              )
+            }
+          />
+        ) : (
+          <DndContext
+            // No sensors means nothing can be picked up on a read-only board.
+            sensors={readOnly ? [] : sensors}
+            collisionDetection={closestCorners}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDragCancel={() => setDraggingTask(null)}
+          >
+            <div className="scrollbar-slim flex min-h-0 flex-1 gap-3 overflow-x-auto px-4 pb-4 md:px-6">
+              {columns.map((column) => (
+                <TaskColumn
+                  key={column.status}
+                  status={column.status}
+                  tasks={column.tasks}
+                  totalCount={column.totalCount}
+                  selectedIds={selectedSet}
+                  selectionMode={selectionMode}
+                  subtasksByParent={subtasksByParent}
+                  membersById={membersById}
+                  onToggleSelect={(id) => dispatch(toggleSelection(id))}
+                  onOpen={(id) => dispatch(inspectTask(id))}
+                  onAddTask={readOnly ? undefined : setComposerStatus}
+                />
+              ))}
+            </div>
+
+            {/*
             The overlay renders the dragged card at the cursor in a portal, so
             it is never clipped by a column's own overflow.
           */}
-          <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.25,1,0.5,1)" }}>
-            {draggingTask && <TaskCard task={draggingTask} isOverlay />}
-          </DragOverlay>
-        </DndContext>
-      )}
+            <DragOverlay
+              dropAnimation={{ duration: 180, easing: "cubic-bezier(0.25,1,0.5,1)" }}
+            >
+              {draggingTask && <TaskCard task={draggingTask} isOverlay />}
+            </DragOverlay>
+          </DndContext>
+        )}
 
-      <AnimatePresence>
-        {composerStatus && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <TaskComposer
-              initialStatus={composerStatus}
+        <AnimatePresence>
+          {composerStatus && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <TaskComposer
+                initialStatus={composerStatus}
+                members={memberData?.members ?? []}
+                onClose={() => setComposerStatus(null)}
+                onCreate={async (input) => {
+                  await actions.create(input);
+                  setComposerStatus(null);
+                }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {inspectedTask && (
+            <TaskDetailPanel
+              key={inspectedTask.id}
+              task={inspectedTask}
+              subtasks={subtasksByParent.get(inspectedTask.id) ?? []}
+              siblings={tasks.filter((entry) => !entry.parentId)}
               members={memberData?.members ?? []}
-              onClose={() => setComposerStatus(null)}
-              onCreate={async (input) => {
-                await actions.create(input);
-                setComposerStatus(null);
-              }}
+              labels={boardLabels}
+              actions={actions}
+              readOnly={readOnly}
+              onClose={() => dispatch(inspectTask(null))}
             />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
-        {inspectedTask && (
-          <TaskDetailPanel
-            key={inspectedTask.id}
-            task={inspectedTask}
-            subtasks={subtasksByParent.get(inspectedTask.id) ?? []}
-            siblings={tasks.filter((entry) => !entry.parentId)}
-            members={memberData?.members ?? []}
-            actions={actions}
-            readOnly={readOnly}
-            onClose={() => dispatch(inspectTask(null))}
-          />
-        )}
-      </AnimatePresence>
+        {helpOpen && <ShortcutsHelp onClose={() => setHelpOpen(false)} />}
 
-      {helpOpen && <ShortcutsHelp onClose={() => setHelpOpen(false)} />}
-
-      {!readOnly && <AuriGuide tasks={tasks} onSeedSamples={() => void seedSamples()} />}
-    </div>
+        {!readOnly && <AuriGuide tasks={tasks} onSeedSamples={() => void seedSamples()} />}
+      </div>
+    </TaskLabelsContext.Provider>
   );
 }
 

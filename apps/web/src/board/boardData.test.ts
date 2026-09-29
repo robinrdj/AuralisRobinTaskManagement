@@ -252,3 +252,44 @@ describe("summarise", () => {
     expect(stats.overdue).toBe(0);
   });
 });
+
+describe("label filtering", () => {
+  const bug = { id: "label-bug", boardId: "board", name: "Bug", color: "#dc2626" };
+  const ux = { id: "label-ux", boardId: "board", name: "UX", color: "#2563eb" };
+
+  it("keeps tasks carrying any of the chosen labels", () => {
+    const tagged = task();
+    const other = task();
+    const untagged = task();
+    const labelsByTask = new Map([
+      [tagged.id, [bug]],
+      [other.id, [ux]],
+    ]);
+    const chosen = filters({ labelIds: [bug.id, ux.id] });
+
+    expect(matchesFilters(tagged, chosen, NOW, labelsByTask)).toBe(true);
+    expect(matchesFilters(other, chosen, NOW, labelsByTask)).toBe(true);
+    expect(matchesFilters(untagged, chosen, NOW, labelsByTask)).toBe(false);
+  });
+
+  it("matches a search against label names", () => {
+    const tagged = task({ title: "Something unrelated" });
+    const labelsByTask = new Map([[tagged.id, [ux]]]);
+    expect(matchesFilters(tagged, filters({ search: "ux" }), NOW, labelsByTask)).toBe(true);
+    expect(matchesFilters(tagged, filters({ search: "ux" }), NOW)).toBe(false);
+  });
+
+  it("applies through buildBoard", () => {
+    const tagged = task();
+    const untagged = task();
+    const columns = buildBoard({
+      tasks: [tagged, untagged],
+      filters: filters({ labelIds: [bug.id] }),
+      sortBy: "position",
+      sortDirection: "asc",
+      now: NOW,
+      labelsByTask: new Map([[tagged.id, [bug]]]),
+    });
+    expect(columns.flatMap((column) => column.tasks).map((t) => t.id)).toEqual([tagged.id]);
+  });
+});

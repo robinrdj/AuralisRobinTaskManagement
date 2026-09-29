@@ -143,3 +143,18 @@ describe("formatRelativeTime", () => {
     expect(formatRelativeTime("not a date", now)).toBe("");
   });
 });
+
+describe("label changes", () => {
+  it("lists the labels before and after", () => {
+    const line = describeActivity({
+      id: "00000000-0000-4000-8000-000000000001",
+      taskId: "00000000-0000-4000-8000-000000000002",
+      boardId: "00000000-0000-4000-8000-000000000003",
+      actorId: null,
+      kind: "task.updated",
+      payload: { labels: { from: [], to: ["Bug", "UX"] } },
+      createdAt: new Date().toISOString(),
+    });
+    expect(line.details).toEqual(["labels: none → Bug, UX"]);
+  });
+});

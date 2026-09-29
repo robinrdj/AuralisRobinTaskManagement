@@ -3,6 +3,8 @@ import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolk
 import type {
   Activity,
   Comment,
+  Label,
+  LabelAssignment,
   CreateTaskInput,
   PublicUser,
   Task,
@@ -90,7 +92,7 @@ function isAuthEndpoint(args: string | FetchArgs): boolean {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Task", "Board", "Session", "Activity", "Dependency", "Comment"],
+  tagTypes: ["Task", "Board", "Session", "Activity", "Dependency", "Comment", "Label"],
   endpoints: (builder) => ({
     getSession: builder.query<{ user: PublicUser; boards: BoardSummary[] }, void>({
       query: () => "/auth/me",
@@ -388,6 +390,77 @@ export const api = createApi({
       invalidatesTags: (_r, _e, arg) => [{ type: "Comment", id: arg.taskId }],
     }),
 
+    getLabels: builder.query<{ labels: Label[]; assignments: LabelAssignment[] }, string>({
+      query: (boardId) => `/boards/${boardId}/labels`,
+      providesTags: (_r, _e, boardId) => [{ type: "Label", id: boardId }],
+    }),
+
+    createLabel: builder.mutation<
+      { label: Label },
+      { boardId: string; name: string; color: string }
+    >({
+      query: ({ boardId, ...body }) => ({
+        url: `/boards/${boardId}/labels`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: "Label", id: arg.boardId }],
+    }),
+
+    updateLabel: builder.mutation<
+      { label: Label },
+      { boardId: string; labelId: string; name?: string; color?: string }
+    >({
+      query: ({ boardId, labelId, ...body }) => ({
+        url: `/boards/${boardId}/labels/${labelId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: "Label", id: arg.boardId }],
+    }),
+
+    deleteLabel: builder.mutation<void, { boardId: string; labelId: string }>({
+      query: ({ boardId, labelId }) => ({
+        url: `/boards/${boardId}/labels/${labelId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: "Label", id: arg.boardId }],
+    }),
+
+    /** Applied to the cache at once, so a toggled label shows before the server answers. */
+    setTaskLabels: builder.mutation<
+      void,
+      { boardId: string; taskId: string; labelIds: string[] }
+    >({
+      query: ({ taskId, labelIds }) => ({
+        url: `/tasks/${taskId}/labels`,
+        method: "PUT",
+        body: { labelIds },
+      }),
+      async onQueryStarted({ boardId, taskId, labelIds }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          api.util.updateQueryData("getLabels", boardId, (draft) => {
+            draft.assignments = [
+              ...draft.assignments.filter((entry) => entry.taskId !== taskId),
+              ...labelIds.map((labelId) => ({ taskId, labelId })),
+            ];
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patch.undo();
+        }
+      },
+      // Refetching afterwards settles a race: a label-list refetch already in
+      // flight (after creating a label, say) could otherwise land last and
+      // erase the optimistic assignment.
+      invalidatesTags: (_r, _e, arg) => [
+        { type: "Activity", id: arg.taskId },
+        { type: "Label", id: arg.boardId },
+      ],
+    }),
+
     getTaskActivity: builder.query<Activity[], string>({
       query: (taskId) => `/tasks/${taskId}/activity`,
       transformResponse: (response: { activity: Activity[] }) => response.activity,
@@ -446,4 +519,9 @@ export const {
   useAddCommentMutation,
   useEditCommentMutation,
   useDeleteCommentMutation,
+  useGetLabelsQuery,
+  useCreateLabelMutation,
+  useUpdateLabelMutation,
+  useDeleteLabelMutation,
+  useSetTaskLabelsMutation,
 } = api;

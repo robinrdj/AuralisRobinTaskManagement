@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TASK_PRIORITIES, TASK_STATUSES } from "@auralis/shared";
+import { TASK_PRIORITIES, TASK_STATUSES, type Label } from "@auralis/shared";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   clearFilters,
@@ -27,6 +27,7 @@ export function FilterBar({
   members,
   connected,
   presentMembers,
+  labels = [],
   readOnly = false,
   onAddTask,
   importExport,
@@ -35,6 +36,7 @@ export function FilterBar({
   members: BoardMember[];
   connected: boolean;
   presentMembers: PresenceMember[];
+  labels?: Label[];
   readOnly?: boolean;
   onAddTask: () => void;
   /** The export/import menu, passed in so the bar stays presentational. */
@@ -243,6 +245,27 @@ export function FilterBar({
                   }}
                 >
                   {member.name}
+                </Chip>
+              ))}
+            </FilterGroup>
+          )}
+
+          {labels.length > 0 && (
+            <FilterGroup label="Labels">
+              {labels.map((label) => (
+                <Chip
+                  key={label.id}
+                  active={filters.labelIds.includes(label.id)}
+                  color={label.color}
+                  onClick={() => {
+                    const next = filters.labelIds.includes(label.id)
+                      ? filters.labelIds.filter((id) => id !== label.id)
+                      : [...filters.labelIds, label.id];
+                    dispatch(setFilters({ labelIds: next }));
+                    dispatch(recordFilterUse());
+                  }}
+                >
+                  {label.name}
                 </Chip>
               ))}
             </FilterGroup>

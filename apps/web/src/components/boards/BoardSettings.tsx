@@ -14,6 +14,7 @@ import { pushToast } from "@/store/toastSlice";
 import { Dialog } from "../ui/Dialog";
 import { Button, Skeleton } from "../ui/primitives";
 import { errorMessage } from "../ui/labels";
+import { LabelManager } from "./LabelManager";
 
 const CONTROL_CLASS =
   "h-9 rounded-[var(--radius-control)] border border-[var(--border-default)] bg-[var(--surface-raised)] px-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none disabled:opacity-60";
@@ -102,7 +103,7 @@ export function BoardSettings({
             htmlFor="board-name"
             className="text-2xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
           >
-            Name
+            Board name
           </label>
           <input
             id="board-name"
@@ -249,6 +250,8 @@ export function BoardSettings({
             )}
           </section>
         )}
+
+        <LabelManager boardId={board.id} canEdit={board.role !== "viewer"} />
 
         <section className="border-t border-[var(--border-subtle)] pt-4">
           {isOwner ? (

@@ -87,6 +87,12 @@ export function useRealtimeBoard(boardId: string | undefined) {
       );
     };
 
+    const onLabelsChanged = (event: MessageEvent<string>) => {
+      const message = parse<{ origin: string | null }>(event.data);
+      if (!message || message.origin === CLIENT_ID) return;
+      dispatch(api.util.invalidateTags([{ type: "Label", id: boardId }]));
+    };
+
     // Membership or name changed: cheap to refetch, and rare enough not to patch.
     const onBoardChanged = () => {
       dispatch(api.util.invalidateTags(["Board"]));
@@ -102,6 +108,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
     source.addEventListener("task.deleted", onDeleted as EventListener);
     source.addEventListener("presence", onPresence as EventListener);
     source.addEventListener("board.changed", onBoardChanged);
+    source.addEventListener("labels.changed", onLabelsChanged as EventListener);
     source.addEventListener("comment.changed", onCommentChanged as EventListener);
     source.addEventListener("error", onError);
 
@@ -111,6 +118,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
       source.removeEventListener("task.deleted", onDeleted as EventListener);
       source.removeEventListener("presence", onPresence as EventListener);
       source.removeEventListener("board.changed", onBoardChanged);
+      source.removeEventListener("labels.changed", onLabelsChanged as EventListener);
       source.removeEventListener("comment.changed", onCommentChanged as EventListener);
       source.removeEventListener("error", onError);
       source.close();

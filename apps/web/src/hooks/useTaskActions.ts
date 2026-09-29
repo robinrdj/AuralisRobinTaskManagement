@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import type { CreateTaskInput, Task, TaskStatus, UpdateTaskInput } from "@auralis/shared";
 import {
+  api,
+  useSetTaskLabelsMutation,
   useBulkCreateTasksMutation,
   useBulkDeleteTasksMutation,
   useBulkUpdateTasksMutation,
@@ -8,7 +10,7 @@ import {
   useDeleteTaskMutation,
   useUpdateTaskMutation,
 } from "@/store/api";
-import { useAppDispatch } from "@/store";
+import { useAppDispatch, useAppStore } from "@/store";
 import { pushToast, registerUndo } from "@/store/toastSlice";
 import { recordMove } from "@/store/tourSlice";
 
@@ -33,6 +35,42 @@ export function useTaskActions(boardId: string | undefined) {
   const [bulkUpdate] = useBulkUpdateTasksMutation();
   const [bulkDelete] = useBulkDeleteTasksMutation();
   const [bulkCreate] = useBulkCreateTasksMutation();
+  const [setTaskLabels] = useSetTaskLabelsMutation();
+  const store = useAppStore();
+
+  /**
+   * The labels each task carries right now, read from the cache.
+   *
+   * Deleting a task deletes its label assignments with it, so undo has to
+   * remember them beforehand to put them back.
+   */
+  const snapshotLabels = useCallback(
+    (taskIds: string[]): Map<string, string[]> => {
+      const snapshot = new Map<string, string[]>();
+      if (!boardId) return snapshot;
+      const assignments =
+        api.endpoints.getLabels.select(boardId)(store.getState()).data?.assignments ?? [];
+      const wanted = new Set(taskIds);
+      for (const { taskId, labelId } of assignments) {
+        if (!wanted.has(taskId)) continue;
+        snapshot.set(taskId, [...(snapshot.get(taskId) ?? []), labelId]);
+      }
+      return snapshot;
+    },
+    [boardId, store]
+  );
+
+  const restoreLabels = useCallback(
+    async (snapshot: Map<string, string[]>) => {
+      if (!boardId) return;
+      await Promise.all(
+        [...snapshot].map(([taskId, labelIds]) =>
+          setTaskLabels({ boardId, taskId, labelIds }).unwrap()
+        )
+      );
+    },
+    [boardId, setTaskLabels]
+  );
 
   const notifyFailure = useCallback(
     (message: string) => {
@@ -172,6 +210,7 @@ export function useTaskActions(boardId: string | undefined) {
   const remove = useCallback(
     async (task: Task) => {
       if (!boardId) return;
+      const labels = snapshotLabels([task.id]);
       try {
         await deleteTask({ id: task.id, boardId }).unwrap();
         dispatch(
@@ -191,6 +230,7 @@ export function useTaskActions(boardId: string | undefined) {
                 parentId: task.parentId,
                 position: task.position,
               }).unwrap();
+              await restoreLabels(labels);
             }),
           })
         );
@@ -198,7 +238,7 @@ export function useTaskActions(boardId: string | undefined) {
         notifyFailure("Could not delete that task.");
       }
     },
-    [boardId, deleteTask, createTask, dispatch, notifyFailure]
+    [boardId, deleteTask, createTask, dispatch, notifyFailure, snapshotLabels, restoreLabels]
   );
 
   const updateMany = useCallback(
@@ -245,6 +285,7 @@ export function useTaskActions(boardId: string | undefined) {
     async (tasks: Task[]) => {
       if (!boardId || tasks.length === 0) return;
       const snapshot = tasks.map((task) => ({ ...task }));
+      const labels = snapshotLabels(tasks.map((task) => task.id));
 
       try {
         await bulkDelete({ ids: tasks.map((task) => task.id), boardId }).unwrap();
@@ -269,6 +310,7 @@ export function useTaskActions(boardId: string | undefined) {
                   position: task.position,
                 }).unwrap();
               }
+              await restoreLabels(labels);
             }),
           })
         );
@@ -276,7 +318,7 @@ export function useTaskActions(boardId: string | undefined) {
         notifyFailure("Could not delete those tasks.");
       }
     },
-    [boardId, bulkDelete, createTask, dispatch, notifyFailure]
+    [boardId, bulkDelete, createTask, dispatch, notifyFailure, snapshotLabels, restoreLabels]
   );
 
   return { create, createMany, importTasks, update, move, remove, updateMany, removeMany };

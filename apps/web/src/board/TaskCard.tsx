@@ -1,8 +1,9 @@
-import { memo } from "react";
+import { memo, useContext } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { daysUntil, formatRelativeDueDate, isOverdue, type Task } from "@auralis/shared";
 import { cx, PRIORITY_LABELS, STATUS_LABELS } from "@/components/ui/labels";
+import { TaskLabelsContext } from "./boardContext";
 
 export interface TaskCardProps {
   task: Task;
@@ -45,6 +46,7 @@ function TaskCardImpl({
   });
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
+  const labels = useContext(TaskLabelsContext).get(task.id) ?? [];
   const overdue = isOverdue(task);
   const dueSoon =
     !overdue && task.dueDate !== null && task.status !== "completed"
@@ -117,6 +119,20 @@ function TaskCardImpl({
           )}
         </button>
       </div>
+
+      {labels.length > 0 && (
+        <ul className="mt-2 flex flex-wrap gap-1" aria-label="Labels">
+          {labels.map((label) => (
+            <li
+              key={label.id}
+              className="max-w-[10rem] truncate rounded-[var(--radius-pill)] px-1.5 py-0.5 text-2xs font-medium text-white"
+              style={{ backgroundColor: label.color }}
+            >
+              {label.name}
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
         <span

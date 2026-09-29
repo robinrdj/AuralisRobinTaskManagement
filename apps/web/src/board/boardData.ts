@@ -2,6 +2,7 @@ import {
   isOverdue,
   TASK_PRIORITIES,
   TASK_STATUSES,
+  type Label,
   type Task,
   type TaskStatus,
 } from "@auralis/shared";
@@ -25,17 +26,25 @@ const PRIORITY_RANK: Record<string, number> = Object.fromEntries(
   TASK_PRIORITIES.map((priority, index) => [priority, index])
 );
 
-/** Case-insensitive match across title and description. */
-function matchesSearch(task: Task, search: string): boolean {
+/** Case-insensitive match across title, description and label names. */
+function matchesSearch(task: Task, search: string, labels: readonly Label[]): boolean {
   if (!search) return true;
   const needle = search.toLowerCase();
   return (
-    task.title.toLowerCase().includes(needle) || task.description.toLowerCase().includes(needle)
+    task.title.toLowerCase().includes(needle) ||
+    task.description.toLowerCase().includes(needle) ||
+    labels.some((label) => label.name.toLowerCase().includes(needle))
   );
 }
 
-export function matchesFilters(task: Task, filters: Filters, now = new Date()): boolean {
-  if (!matchesSearch(task, filters.search.trim())) return false;
+export function matchesFilters(
+  task: Task,
+  filters: Filters,
+  now = new Date(),
+  labelsByTask: ReadonlyMap<string, readonly Label[]> = new Map()
+): boolean {
+  const labels = labelsByTask.get(task.id) ?? [];
+  if (!matchesSearch(task, filters.search.trim(), labels)) return false;
   if (filters.priorities.length > 0 && !filters.priorities.includes(task.priority))
     return false;
   if (filters.statuses.length > 0 && !filters.statuses.includes(task.status)) return false;
@@ -50,6 +59,10 @@ export function matchesFilters(task: Task, filters: Filters, now = new Date()): 
   if (filters.dueTo && (!task.dueDate || task.dueDate > filters.dueTo)) return false;
 
   if (filters.overdueOnly && !isOverdue(task, now)) return false;
+
+  if (filters.labelIds.length > 0) {
+    if (!labels.some((label) => filters.labelIds.includes(label.id))) return false;
+  }
 
   return true;
 }
@@ -91,6 +104,7 @@ export interface BuildBoardOptions {
   /** Subtasks are shown inside their parent, not as top-level cards. */
   includeSubtasks?: boolean;
   now?: Date;
+  labelsByTask?: ReadonlyMap<string, readonly Label[]>;
 }
 
 export function buildBoard({
@@ -100,6 +114,7 @@ export function buildBoard({
   sortDirection,
   includeSubtasks = false,
   now = new Date(),
+  labelsByTask,
 }: BuildBoardOptions): BoardColumn[] {
   const totals = new Map<TaskStatus, number>();
   for (const status of TASK_STATUSES) totals.set(status, 0);
@@ -108,7 +123,7 @@ export function buildBoard({
   for (const task of tasks) {
     if (!includeSubtasks && task.parentId) continue;
     totals.set(task.status, (totals.get(task.status) ?? 0) + 1);
-    if (matchesFilters(task, filters, now)) visible.push(task);
+    if (matchesFilters(task, filters, now, labelsByTask)) visible.push(task);
   }
 
   const direction = sortDirection === "desc" ? -1 : 1;

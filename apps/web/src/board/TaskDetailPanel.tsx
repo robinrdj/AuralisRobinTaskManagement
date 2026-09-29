@@ -5,6 +5,7 @@ import {
   TASK_STATUSES,
   formatRelativeDueDate,
   isOverdue,
+  type Label,
   type Task,
   type TaskPriority,
   type TaskStatus,
@@ -15,6 +16,7 @@ import { Button, Skeleton } from "@/components/ui/primitives";
 import { describeActivity, formatRelativeTime } from "./activityText";
 import { Dependencies } from "./Dependencies";
 import { Comments } from "./Comments";
+import { LabelPicker } from "./LabelPicker";
 import type { useTaskActions } from "@/hooks/useTaskActions";
 
 type Actions = ReturnType<typeof useTaskActions>;
@@ -32,6 +34,7 @@ export function TaskDetailPanel({
   subtasks,
   siblings,
   members,
+  labels = [],
   actions,
   readOnly = false,
   onClose,
@@ -41,6 +44,8 @@ export function TaskDetailPanel({
   /** Other top-level tasks on the board, for the dependency picker. */
   siblings: Task[];
   members: BoardMember[];
+  /** Every label on the board, for the picker. */
+  labels?: Label[];
   actions: Actions;
   /** Disables every control, for someone with view-only access. */
   readOnly?: boolean;
@@ -218,6 +223,13 @@ export function TaskDetailPanel({
               </Field>
             )}
           </section>
+
+          <LabelPicker
+            taskId={task.id}
+            boardId={task.boardId}
+            labels={labels}
+            readOnly={readOnly}
+          />
 
           <section>
             <h3 className="mb-1.5 text-2xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">

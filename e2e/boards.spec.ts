@@ -41,7 +41,7 @@ test.describe("multiple boards", () => {
     const dialog = page.getByRole("dialog", { name: "Board settings" });
     await expect(dialog.getByRole("list", { name: "Board members" })).toBeVisible();
 
-    const name = dialog.getByRole("textbox", { name: "Name" });
+    const name = dialog.getByRole("textbox", { name: "Board name" });
     await name.fill("Renamed board");
     await name.press("Enter");
 

@@ -19,6 +19,7 @@ const FIELD_LABELS: Record<string, string> = {
   assigneeId: "assignee",
   position: "position",
   parentId: "parent task",
+  labels: "labels",
 };
 
 interface Change {
@@ -32,6 +33,7 @@ function isChange(value: unknown): value is Change {
 
 /** Renders a single field value the way it appears in the UI. */
 function renderValue(field: string, value: unknown): string {
+  if (Array.isArray(value)) return value.length === 0 ? "none" : value.join(", ");
   if (value === null || value === undefined || value === "") return "empty";
 
   switch (field) {

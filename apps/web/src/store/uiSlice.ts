@@ -9,6 +9,8 @@ export interface Filters {
   priorities: TaskPriority[];
   statuses: TaskStatus[];
   assigneeIds: string[];
+  /** Show tasks carrying any of these labels. */
+  labelIds: string[];
   dueFrom: string | null;
   dueTo: string | null;
   /** Show only tasks past their due date and not yet complete. */
@@ -43,6 +45,7 @@ export const EMPTY_FILTERS: Filters = {
   priorities: [],
   statuses: [],
   assigneeIds: [],
+  labelIds: [],
   dueFrom: null,
   dueTo: null,
   overdueOnly: false,
@@ -182,6 +185,7 @@ export function hasActiveFilters(filters: Filters): boolean {
     filters.priorities.length > 0 ||
     filters.statuses.length > 0 ||
     filters.assigneeIds.length > 0 ||
+    filters.labelIds.length > 0 ||
     filters.dueFrom !== null ||
     filters.dueTo !== null ||
     filters.overdueOnly
