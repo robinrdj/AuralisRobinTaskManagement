@@ -75,6 +75,18 @@ export function useRealtimeBoard(boardId: string | undefined) {
       if (message) setMembers(message.members);
     };
 
+    // Only the thread's own query refetches, and only if something is showing it.
+    const onCommentChanged = (event: MessageEvent<string>) => {
+      const message = parse<{ origin: string | null; taskId: string }>(event.data);
+      if (!message || message.origin === CLIENT_ID) return;
+      dispatch(
+        api.util.invalidateTags([
+          { type: "Comment", id: message.taskId },
+          { type: "Activity", id: message.taskId },
+        ])
+      );
+    };
+
     // Membership or name changed: cheap to refetch, and rare enough not to patch.
     const onBoardChanged = () => {
       dispatch(api.util.invalidateTags(["Board"]));
@@ -90,6 +102,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
     source.addEventListener("task.deleted", onDeleted as EventListener);
     source.addEventListener("presence", onPresence as EventListener);
     source.addEventListener("board.changed", onBoardChanged);
+    source.addEventListener("comment.changed", onCommentChanged as EventListener);
     source.addEventListener("error", onError);
 
     return () => {
@@ -98,6 +111,7 @@ export function useRealtimeBoard(boardId: string | undefined) {
       source.removeEventListener("task.deleted", onDeleted as EventListener);
       source.removeEventListener("presence", onPresence as EventListener);
       source.removeEventListener("board.changed", onBoardChanged);
+      source.removeEventListener("comment.changed", onCommentChanged as EventListener);
       source.removeEventListener("error", onError);
       source.close();
     };

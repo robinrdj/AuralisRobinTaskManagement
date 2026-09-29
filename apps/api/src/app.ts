@@ -8,6 +8,7 @@ import { RealtimeHub } from "./realtime/hub.js";
 import authRoutes from "./routes/auth.js";
 import boardRoutes from "./routes/boards.js";
 import taskRoutes from "./routes/tasks.js";
+import commentRoutes from "./routes/comments.js";
 import type { AppContext } from "./lib/context.js";
 import type { Database } from "./db/client.js";
 import type { Env } from "./lib/env.js";
@@ -82,6 +83,7 @@ export function createApp({ db, env, hub = new RealtimeHub() }: CreateAppOptions
   app.route("/api/auth", authRoutes);
   app.route("/api/boards", boardRoutes);
   app.route("/api/tasks", taskRoutes);
+  app.route("/api/tasks", commentRoutes);
 
   app.notFound((c) =>
     c.json({ error: { code: "not_found", message: "No such endpoint" } }, 404)

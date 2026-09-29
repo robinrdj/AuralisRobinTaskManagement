@@ -161,6 +161,29 @@ export const activities = pgTable(
   ]
 );
 
+/**
+ * Discussion on a task. Deleted with the task; an author who deletes their
+ * account leaves their comments behind, unattributed.
+ */
+export const comments = pgTable(
+  "comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    boardId: uuid("board_id")
+      .notNull()
+      .references(() => boards.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id").references(() => users.id, { onDelete: "set null" }),
+    /** Mentions are stored inline as `@[Name](userId)`; see packages/shared/src/comment.ts. */
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    editedAt: timestamp("edited_at", { withTimezone: true }),
+  },
+  (table) => [index("comments_task_idx").on(table.taskId, table.createdAt)]
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   boards: many(boards),
   memberships: many(boardMembers),

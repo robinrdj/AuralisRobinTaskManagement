@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import type {
   Activity,
+  Comment,
   CreateTaskInput,
   PublicUser,
   Task,
@@ -89,7 +90,7 @@ function isAuthEndpoint(args: string | FetchArgs): boolean {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Task", "Board", "Session", "Activity", "Dependency"],
+  tagTypes: ["Task", "Board", "Session", "Activity", "Dependency", "Comment"],
   endpoints: (builder) => ({
     getSession: builder.query<{ user: PublicUser; boards: BoardSummary[] }, void>({
       query: () => "/auth/me",
@@ -349,6 +350,44 @@ export const api = createApi({
       ],
     }),
 
+    getComments: builder.query<Comment[], string>({
+      query: (taskId) => `/tasks/${taskId}/comments`,
+      transformResponse: (response: { comments: Comment[] }) => response.comments,
+      providesTags: (_r, _e, taskId) => [{ type: "Comment", id: taskId }],
+    }),
+
+    addComment: builder.mutation<{ comment: Comment }, { taskId: string; body: string }>({
+      query: ({ taskId, body }) => ({
+        url: `/tasks/${taskId}/comments`,
+        method: "POST",
+        body: { body },
+      }),
+      invalidatesTags: (_r, _e, arg) => [
+        { type: "Comment", id: arg.taskId },
+        { type: "Activity", id: arg.taskId },
+      ],
+    }),
+
+    editComment: builder.mutation<
+      { comment: Comment },
+      { taskId: string; commentId: string; body: string }
+    >({
+      query: ({ taskId, commentId, body }) => ({
+        url: `/tasks/${taskId}/comments/${commentId}`,
+        method: "PATCH",
+        body: { body },
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: "Comment", id: arg.taskId }],
+    }),
+
+    deleteComment: builder.mutation<void, { taskId: string; commentId: string }>({
+      query: ({ taskId, commentId }) => ({
+        url: `/tasks/${taskId}/comments/${commentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: "Comment", id: arg.taskId }],
+    }),
+
     getTaskActivity: builder.query<Activity[], string>({
       query: (taskId) => `/tasks/${taskId}/activity`,
       transformResponse: (response: { activity: Activity[] }) => response.activity,
@@ -403,4 +442,8 @@ export const {
   useAddDependencyMutation,
   useRemoveDependencyMutation,
   useGetTaskActivityQuery,
+  useGetCommentsQuery,
+  useAddCommentMutation,
+  useEditCommentMutation,
+  useDeleteCommentMutation,
 } = api;

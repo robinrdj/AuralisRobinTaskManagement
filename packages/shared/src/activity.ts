@@ -48,6 +48,12 @@ export const realtimeMessageSchema = z.discriminatedUnion("type", [
     origin: z.string().nullable(),
     taskId: z.string().uuid(),
   }),
+  /** A task's comments changed; clients viewing that task refetch them. */
+  z.object({
+    type: z.literal("comment.changed"),
+    origin: z.string().nullable(),
+    taskId: z.string().uuid(),
+  }),
   /** The board's name or membership changed; clients refetch rather than patch. */
   z.object({
     type: z.literal("board.changed"),

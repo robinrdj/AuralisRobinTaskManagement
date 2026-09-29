@@ -9,11 +9,12 @@ import {
   type TaskPriority,
   type TaskStatus,
 } from "@auralis/shared";
-import { useGetTaskActivityQuery, type BoardMember } from "@/store/api";
+import { useGetSessionQuery, useGetTaskActivityQuery, type BoardMember } from "@/store/api";
 import { PRIORITY_LABELS, STATUS_LABELS, cx } from "@/components/ui/labels";
 import { Button, Skeleton } from "@/components/ui/primitives";
 import { describeActivity, formatRelativeTime } from "./activityText";
 import { Dependencies } from "./Dependencies";
+import { Comments } from "./Comments";
 import type { useTaskActions } from "@/hooks/useTaskActions";
 
 type Actions = ReturnType<typeof useTaskActions>;
@@ -48,11 +49,17 @@ export function TaskDetailPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const [dependencyError, setDependencyError] = useState<string | null>(null);
   const { data: activity = [], isLoading: activityLoading } = useGetTaskActivityQuery(task.id);
+  const { data: session } = useGetSessionQuery();
+  const isBoardOwner =
+    session?.boards.find((board) => board.id === task.boardId)?.role === "owner";
 
   // Escape closes; Tab is trapped inside for as long as the panel is open.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        // A control that uses Escape itself (an open suggestion list) gets it first.
+        const target = event.target as HTMLElement | null;
+        if (target?.closest?.('[data-owns-escape="true"]')) return;
         event.stopPropagation();
         onClose();
         return;
@@ -247,6 +254,14 @@ export function TaskDetailPanel({
               {dependencyError}
             </p>
           )}
+
+          <Comments
+            taskId={task.id}
+            members={members}
+            currentUserId={session?.user.id}
+            isOwner={isBoardOwner}
+            readOnly={readOnly}
+          />
 
           <section>
             <h3 className="mb-2 text-2xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">

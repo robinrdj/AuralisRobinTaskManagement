@@ -48,7 +48,7 @@ function serialize(row: TaskRow): Task {
  * the task row alone, because a task id is guessable and a board id is not
  * a permission.
  */
-async function assertBoardAccess(
+export async function assertBoardAccess(
   db: Database,
   boardId: string,
   userId: string,
@@ -68,7 +68,7 @@ async function assertBoardAccess(
 }
 
 /** Loads a task and checks board access in one place. */
-async function loadTask(
+export async function loadTask(
   db: Database,
   taskId: string,
   userId: string,
