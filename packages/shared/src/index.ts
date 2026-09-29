@@ -6,3 +6,4 @@ export * from "./auth.js";
 export * from "./serialize.js";
 export * from "./comment.js";
 export * from "./label.js";
+export * from "./recurrence.js";

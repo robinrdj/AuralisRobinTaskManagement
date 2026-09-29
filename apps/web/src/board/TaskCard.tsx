@@ -1,7 +1,13 @@
 import { memo, useContext } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { daysUntil, formatRelativeDueDate, isOverdue, type Task } from "@auralis/shared";
+import {
+  daysUntil,
+  formatRelativeDueDate,
+  isOverdue,
+  RECURRENCE_LABELS,
+  type Task,
+} from "@auralis/shared";
 import { cx, PRIORITY_LABELS, STATUS_LABELS } from "@/components/ui/labels";
 import { TaskLabelsContext } from "./boardContext";
 
@@ -173,6 +179,25 @@ function TaskCardImpl({
               />
             </svg>
             {formatRelativeDueDate(task.dueDate)}
+          </span>
+        )}
+
+        {task.recurrence && (
+          <span
+            className="inline-flex items-center gap-1 text-2xs text-[var(--text-muted)]"
+            title={RECURRENCE_LABELS[task.recurrence]}
+          >
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path
+                d="M13 5.5A5.5 5.5 0 0 0 3.2 4M3 10.5A5.5 5.5 0 0 0 12.8 12M3 1.5V4.5H6M13 14.5V11.5H10"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="sr-only">{RECURRENCE_LABELS[task.recurrence]}</span>
+            <span aria-hidden="true">Repeats</span>
           </span>
         )}
 

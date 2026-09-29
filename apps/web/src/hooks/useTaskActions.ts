@@ -177,9 +177,15 @@ export function useTaskActions(boardId: string | undefined) {
       try {
         await updateTask({ id: task.id, boardId, updates }).unwrap();
         if (updates.status) dispatch(recordMove(updates.status));
+        const repeats =
+          task.recurrence && updates.status === "completed" && task.status !== "completed";
         dispatch(
           pushToast({
-            message: description ?? `Updated "${truncate(task.title)}"`,
+            message:
+              description ??
+              (repeats
+                ? `Done. The next "${truncate(task.title)}" is on the board.`
+                : `Updated "${truncate(task.title)}"`),
             tone: "success",
             undoToken: registerUndo(async () => {
               await updateTask({ id: task.id, boardId, updates: previous }).unwrap();
@@ -228,6 +234,7 @@ export function useTaskActions(boardId: string | undefined) {
                 dueDate: task.dueDate,
                 assigneeId: task.assigneeId,
                 parentId: task.parentId,
+                recurrence: task.recurrence ?? null,
                 position: task.position,
               }).unwrap();
               await restoreLabels(labels);
@@ -307,6 +314,7 @@ export function useTaskActions(boardId: string | undefined) {
                   dueDate: task.dueDate,
                   assigneeId: task.assigneeId,
                   parentId: task.parentId,
+                  recurrence: task.recurrence ?? null,
                   position: task.position,
                 }).unwrap();
               }

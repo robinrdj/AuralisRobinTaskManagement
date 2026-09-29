@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { taskRecurrenceSchema } from "./recurrence.js";
 
 /**
  * Domain enums.
@@ -50,6 +51,11 @@ export const taskSchema = z.object({
   /** Fractional index for stable ordering within a column under concurrent drags. */
   position: z.string(),
   parentId: z.string().uuid().nullable(),
+  /**
+   * How the task repeats, or null. Optional in the type so task objects built
+   * before recurring tasks existed (fixtures, old exports) remain valid.
+   */
+  recurrence: taskRecurrenceSchema.nullable().optional(),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
   completedAt: isoDateTimeSchema.nullable(),
@@ -65,6 +71,7 @@ export const createTaskSchema = taskSchema
     assigneeId: z.string().uuid().nullable().optional(),
     parentId: z.string().uuid().nullable().optional(),
     position: z.string().optional(),
+    recurrence: taskRecurrenceSchema.nullable().optional(),
     /** Client-generated so optimistic inserts keep their identity after the server responds. */
     id: z.string().uuid().optional(),
   });
@@ -82,6 +89,7 @@ export const updateTaskSchema = taskSchema
     assigneeId: true,
     position: true,
     parentId: true,
+    recurrence: true,
   })
   .partial();
 

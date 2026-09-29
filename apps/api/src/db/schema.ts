@@ -12,7 +12,12 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { ACTIVITY_KINDS, TASK_PRIORITIES, TASK_STATUSES } from "@auralis/shared";
+import {
+  ACTIVITY_KINDS,
+  TASK_PRIORITIES,
+  TASK_RECURRENCES,
+  TASK_STATUSES,
+} from "@auralis/shared";
 
 /**
  * Postgres enums are generated from the shared constants, so the database,
@@ -112,6 +117,16 @@ export const tasks = pgTable(
     /** Self-referential: deleting a parent removes its subtasks with it. */
     parentId: uuid("parent_id").references((): AnyPgColumn => tasks.id, {
       onDelete: "cascade",
+    }),
+    /** A TaskRecurrence from the shared package, or null for a one-off task. */
+    recurrence: text("recurrence", { enum: TASK_RECURRENCES }),
+    /**
+     * The occurrence this one was spawned from. Completing a task checks for
+     * an existing successor here, so reopening and re-completing it does not
+     * put a second copy on the board.
+     */
+    recurrenceSourceId: uuid("recurrence_source_id").references((): AnyPgColumn => tasks.id, {
+      onDelete: "set null",
     }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

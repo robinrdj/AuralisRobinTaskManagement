@@ -485,6 +485,7 @@ function buildOptimisticTask(input: CreateTaskInput & { boardId: string }): Task
     // Sorts last within its column, which is where the server will put it.
     position: input.position ?? "zzzz",
     parentId: input.parentId ?? null,
+    recurrence: input.recurrence ?? null,
     createdAt: now,
     updatedAt: now,
     completedAt: status === "completed" ? now : null,

@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -16,6 +16,7 @@ import { activities, boardMembers, taskDependencies, tasks } from "../db/schema.
 import { alias } from "drizzle-orm/pg-core";
 import { badRequest, conflict, forbidden, notFound } from "../lib/errors.js";
 import { requireAuth } from "../middleware/auth.js";
+import { spawnNextOccurrence } from "../lib/recurrence.js";
 import type { AppContext } from "../lib/context.js";
 import type { Database } from "../db/client.js";
 import type { TaskRow } from "../db/schema.js";
@@ -36,10 +37,38 @@ function serialize(row: TaskRow): Task {
     assigneeId: row.assigneeId,
     position: row.position,
     parentId: row.parentId,
+    recurrence: row.recurrence ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     completedAt: row.completedAt?.toISOString() ?? null,
   };
+}
+
+/**
+ * Announces occurrences spawned by completing recurring tasks.
+ *
+ * Sent with no origin, deliberately: the client that completed the task did
+ * not create the copy optimistically, so it needs to hear about it too.
+ */
+function publishSpawned(
+  c: Context<AppContext>,
+  spawned: { task: TaskRow; copiedLabels: boolean }[]
+): void {
+  const hub = c.get("hub");
+  for (const { task, copiedLabels } of spawned) {
+    hub.publish(task.boardId, {
+      type: "task.upserted",
+      origin: null,
+      task: serialize(task) as unknown as Record<string, unknown>,
+    });
+    if (copiedLabels) {
+      hub.publish(task.boardId, {
+        type: "labels.changed",
+        origin: null,
+        boardId: task.boardId,
+      });
+    }
+  }
 }
 
 /**
@@ -133,6 +162,7 @@ router.post("/", zValidator("json", createBodySchema), async (c) => {
         dueDate: body.dueDate ?? null,
         assigneeId: body.assigneeId ?? null,
         parentId: body.parentId ?? null,
+        recurrence: body.recurrence ?? null,
         position,
         completedAt: status === "completed" ? new Date() : null,
       })
@@ -178,6 +208,11 @@ router.patch("/bulk", zValidator("json", bulkUpdateTasksSchema), async (c) => {
     throw badRequest("Position cannot be set on more than one task at a time");
   }
 
+  const wasCompleted = new Set(
+    rows.filter((row) => row.status === "completed").map((row) => row.id)
+  );
+  const spawned: { task: TaskRow; copiedLabels: boolean }[] = [];
+
   const updated = await db.transaction(async (tx) => {
     const result = await tx
       .update(tasks)
@@ -202,6 +237,14 @@ router.patch("/bulk", zValidator("json", bulkUpdateTasksSchema), async (c) => {
       }))
     );
 
+    if (updates.status === "completed") {
+      for (const row of result) {
+        if (wasCompleted.has(row.id)) continue;
+        const next = await spawnNextOccurrence(tx, row, user.id);
+        if (next) spawned.push(next);
+      }
+    }
+
     return result;
   });
 
@@ -213,6 +256,7 @@ router.patch("/bulk", zValidator("json", bulkUpdateTasksSchema), async (c) => {
       task: serialize(row) as unknown as Record<string, unknown>,
     });
   }
+  publishSpawned(c, spawned);
   return c.json({ tasks: updated.map(serialize) });
 });
 
@@ -260,6 +304,7 @@ router.post("/bulk-create", zValidator("json", bulkCreateTasksSchema), async (c)
       dueDate: input.dueDate ?? null,
       assigneeId: input.assigneeId ?? null,
       parentId: input.parentId ?? null,
+      recurrence: input.recurrence ?? null,
       position,
       completedAt: status === "completed" ? new Date() : null,
     };
@@ -361,6 +406,8 @@ router.patch(
       updates.status !== "completed" &&
       existing.status === "completed";
 
+    let spawned: { task: TaskRow; copiedLabels: boolean } | null = null;
+
     const row = await db.transaction(async (tx) => {
       const [updated] = await tx
         .update(tasks)
@@ -397,6 +444,10 @@ router.patch(
         payload: changes,
       });
 
+      if (enteringCompleted) {
+        spawned = await spawnNextOccurrence(tx, updated!, user.id);
+      }
+
       return updated!;
     });
 
@@ -406,6 +457,7 @@ router.patch(
       origin: c.get("originId"),
       task: task as unknown as Record<string, unknown>,
     });
+    if (spawned) publishSpawned(c, [spawned]);
     return c.json({ task });
   }
 );

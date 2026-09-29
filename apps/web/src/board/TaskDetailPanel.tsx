@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import {
+  RECURRENCE_LABELS,
   TASK_PRIORITIES,
+  TASK_RECURRENCES,
   TASK_STATUSES,
   formatRelativeDueDate,
   isOverdue,
   type Label,
   type Task,
   type TaskPriority,
+  type TaskRecurrence,
   type TaskStatus,
 } from "@auralis/shared";
 import { useGetSessionQuery, useGetTaskActivityQuery, type BoardMember } from "@/store/api";
@@ -201,6 +204,26 @@ export function TaskDetailPanel({
                   {formatRelativeDueDate(task.dueDate)}
                 </p>
               )}
+            </Field>
+
+            <Field label="Repeat" htmlFor="detail-repeat">
+              <select
+                id="detail-repeat"
+                value={task.recurrence ?? ""}
+                onChange={(event) =>
+                  void actions.update(task, {
+                    recurrence: (event.target.value || null) as TaskRecurrence | null,
+                  })
+                }
+                className={CONTROL_CLASS}
+              >
+                <option value="">Doesn't repeat</option>
+                {TASK_RECURRENCES.map((rule) => (
+                  <option key={rule} value={rule}>
+                    {RECURRENCE_LABELS[rule]}
+                  </option>
+                ))}
+              </select>
             </Field>
 
             {members.length > 1 && (

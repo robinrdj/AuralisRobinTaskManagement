@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import {
+  RECURRENCE_LABELS,
   TASK_PRIORITIES,
+  TASK_RECURRENCES,
   TASK_STATUSES,
   todayISO,
   type CreateTaskInput,
   type TaskPriority,
+  type TaskRecurrence,
   type TaskStatus,
 } from "@auralis/shared";
 import { Button } from "@/components/ui/primitives";
@@ -36,6 +39,7 @@ export function TaskComposer({
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [dueDate, setDueDate] = useState<string>("");
   const [assigneeId, setAssigneeId] = useState<string>("");
+  const [recurrence, setRecurrence] = useState<TaskRecurrence | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,6 +99,7 @@ export function TaskComposer({
         priority,
         dueDate: dueDate || null,
         assigneeId: assigneeId || null,
+        recurrence,
       });
     } finally {
       setSubmitting(false);
@@ -237,6 +242,24 @@ export function TaskComposer({
                 onChange={(event) => setDueDate(event.target.value)}
                 className={SELECT_CLASS}
               />
+            </Field>
+
+            <Field label="Repeat" htmlFor="composer-repeat">
+              <select
+                id="composer-repeat"
+                value={recurrence ?? ""}
+                onChange={(event) =>
+                  setRecurrence((event.target.value || null) as TaskRecurrence | null)
+                }
+                className={SELECT_CLASS}
+              >
+                <option value="">Doesn't repeat</option>
+                {TASK_RECURRENCES.map((rule) => (
+                  <option key={rule} value={rule}>
+                    {RECURRENCE_LABELS[rule]}
+                  </option>
+                ))}
+              </select>
             </Field>
 
             {members.length > 1 && (

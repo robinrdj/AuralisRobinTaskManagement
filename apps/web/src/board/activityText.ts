@@ -1,4 +1,10 @@
-import { formatDate, type Activity, type ActivityKind } from "@auralis/shared";
+import {
+  formatDate,
+  RECURRENCE_LABELS,
+  type Activity,
+  type ActivityKind,
+  type TaskRecurrence,
+} from "@auralis/shared";
 import { PRIORITY_LABELS, STATUS_LABELS } from "@/components/ui/labels";
 
 /**
@@ -20,6 +26,7 @@ const FIELD_LABELS: Record<string, string> = {
   position: "position",
   parentId: "parent task",
   labels: "labels",
+  recurrence: "repeat",
 };
 
 interface Change {
@@ -43,6 +50,8 @@ function renderValue(field: string, value: unknown): string {
       return PRIORITY_LABELS[value as keyof typeof PRIORITY_LABELS] ?? String(value);
     case "dueDate":
       return formatDate(String(value));
+    case "recurrence":
+      return RECURRENCE_LABELS[value as TaskRecurrence] ?? String(value);
     default:
       return String(value);
   }
@@ -70,7 +79,13 @@ export function describeActivity(activity: Activity): ActivityLine {
   const payload = activity.payload ?? {};
 
   if (activity.kind === "task.created") {
-    return { summary: "created this task", details: [] };
+    return {
+      summary:
+        payload.recurring === true
+          ? "added this as the next occurrence of a repeating task"
+          : "created this task",
+      details: [],
+    };
   }
 
   if (activity.kind === "task.deleted") {
