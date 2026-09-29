@@ -60,6 +60,12 @@ export const realtimeMessageSchema = z.discriminatedUnion("type", [
     origin: z.string().nullable(),
     boardId: z.string().uuid(),
   }),
+  /** A view shared with the board was added, changed or removed. */
+  z.object({
+    type: z.literal("views.changed"),
+    origin: z.string().nullable(),
+    boardId: z.string().uuid(),
+  }),
   /** The board's name or membership changed; clients refetch rather than patch. */
   z.object({
     type: z.literal("board.changed"),

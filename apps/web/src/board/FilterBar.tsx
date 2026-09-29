@@ -12,7 +12,8 @@ import {
 import { recordFilterUse } from "@/store/tourSlice";
 import { Button } from "@/components/ui/primitives";
 import { cx, PRIORITY_LABELS, STATUS_LABELS } from "@/components/ui/labels";
-import type { BoardMember } from "@/store/api";
+import { useGetSessionQuery, type BoardMember } from "@/store/api";
+import { SavedViewsMenu } from "./SavedViewsMenu";
 import type { PresenceMember } from "@/hooks/useRealtimeBoard";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
@@ -24,6 +25,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 ];
 
 export function FilterBar({
+  boardId,
   members,
   connected,
   presentMembers,
@@ -46,6 +48,18 @@ export function FilterBar({
   const { filters, sortBy, sortDirection, selectionMode } = useAppSelector((state) => state.ui);
   const [search, setSearch] = useState(filters.search);
   const [expanded, setExpanded] = useState(false);
+  const { data: session } = useGetSessionQuery();
+  const isBoardOwner = session?.boards.find((board) => board.id === boardId)?.role === "owner";
+
+  /*
+   * Follow the search when something else changes it — applying a saved view,
+   * or "Clear all filters" from the command palette. Typing does not loop back
+   * through here: the store only catches up after the debounce, with the same
+   * text the box already holds.
+   */
+  useEffect(() => {
+    setSearch((current) => (current === filters.search ? current : filters.search));
+  }, [filters.search]);
 
   /*
    * Debounced so typing does not re-filter on every keystroke. The input stays
@@ -140,6 +154,13 @@ export function FilterBar({
             />
           )}
         </Button>
+
+        <SavedViewsMenu
+          boardId={boardId}
+          currentUserId={session?.user.id}
+          isBoardOwner={isBoardOwner}
+          canShare={!readOnly}
+        />
 
         {!readOnly && (
           <Button

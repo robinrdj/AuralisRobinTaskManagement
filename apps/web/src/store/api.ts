@@ -5,6 +5,8 @@ import type {
   Comment,
   Label,
   LabelAssignment,
+  SavedView,
+  ViewFilters,
   CreateTaskInput,
   PublicUser,
   Task,
@@ -92,7 +94,7 @@ function isAuthEndpoint(args: string | FetchArgs): boolean {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Task", "Board", "Session", "Activity", "Dependency", "Comment", "Label"],
+  tagTypes: ["Task", "Board", "Session", "Activity", "Dependency", "Comment", "Label", "View"],
   endpoints: (builder) => ({
     getSession: builder.query<{ user: PublicUser; boards: BoardSummary[] }, void>({
       query: () => "/auth/me",
@@ -461,6 +463,57 @@ export const api = createApi({
       ],
     }),
 
+    getViews: builder.query<SavedView[], string>({
+      query: (boardId) => `/boards/${boardId}/views`,
+      transformResponse: (response: { views: SavedView[] }) => response.views,
+      providesTags: (_r, _e, boardId) => [{ type: "View", id: boardId }],
+    }),
+
+    createView: builder.mutation<
+      { view: SavedView },
+      {
+        boardId: string;
+        name: string;
+        filters: ViewFilters;
+        sortBy: SavedView["sortBy"];
+        sortDirection: "asc" | "desc";
+        shared: boolean;
+      }
+    >({
+      query: ({ boardId, ...body }) => ({
+        url: `/boards/${boardId}/views`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: "View", id: arg.boardId }],
+    }),
+
+    updateView: builder.mutation<
+      { view: SavedView },
+      {
+        boardId: string;
+        viewId: string;
+        filters?: ViewFilters;
+        sortBy?: SavedView["sortBy"];
+        sortDirection?: "asc" | "desc";
+      }
+    >({
+      query: ({ boardId, viewId, ...body }) => ({
+        url: `/boards/${boardId}/views/${viewId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: "View", id: arg.boardId }],
+    }),
+
+    deleteView: builder.mutation<void, { boardId: string; viewId: string }>({
+      query: ({ boardId, viewId }) => ({
+        url: `/boards/${boardId}/views/${viewId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: "View", id: arg.boardId }],
+    }),
+
     getTaskActivity: builder.query<Activity[], string>({
       query: (taskId) => `/tasks/${taskId}/activity`,
       transformResponse: (response: { activity: Activity[] }) => response.activity,
@@ -525,4 +578,8 @@ export const {
   useUpdateLabelMutation,
   useDeleteLabelMutation,
   useSetTaskLabelsMutation,
+  useGetViewsQuery,
+  useCreateViewMutation,
+  useUpdateViewMutation,
+  useDeleteViewMutation,
 } = api;

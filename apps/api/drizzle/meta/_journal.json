@@ -29,6 +29,13 @@
       "when": 1790704196155,
       "tag": "0003_recurring_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790704630419,
+      "tag": "0004_saved_views",
+      "breakpoints": true
     }
   ]
 }

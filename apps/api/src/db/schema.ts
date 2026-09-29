@@ -210,6 +210,29 @@ export const taskLabels = pgTable(
 );
 
 /**
+ * A named set of filters and a sort order. Personal to its owner unless
+ * `shared`, in which case everyone on the board can apply it.
+ */
+export const savedViews = pgTable(
+  "saved_views",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    boardId: uuid("board_id")
+      .notNull()
+      .references(() => boards.id, { onDelete: "cascade" }),
+    ownerId: uuid("owner_id").references(() => users.id, { onDelete: "set null" }),
+    name: text("name").notNull(),
+    /** A ViewFilters object from the shared package, validated on the way in. */
+    filters: jsonb("filters").notNull(),
+    sortBy: text("sort_by").notNull().default("position"),
+    sortDirection: text("sort_direction").notNull().default("asc"),
+    shared: boolean("shared").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("saved_views_board_idx").on(table.boardId, table.ownerId)]
+);
+
+/**
  * Discussion on a task. Deleted with the task; an author who deletes their
  * account leaves their comments behind, unattributed.
  */

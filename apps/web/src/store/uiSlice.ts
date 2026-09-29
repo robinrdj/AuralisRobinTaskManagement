@@ -119,6 +119,20 @@ const uiSlice = createSlice({
       state.filters = { ...EMPTY_FILTERS };
     },
 
+    /** Replaces filters and sort in one step, as applying a saved view does. */
+    applyView: (
+      state,
+      action: PayloadAction<{
+        filters: Filters;
+        sortBy: SortKey;
+        sortDirection: "asc" | "desc";
+      }>
+    ) => {
+      state.filters = { ...action.payload.filters };
+      state.sortBy = action.payload.sortBy;
+      state.sortDirection = action.payload.sortDirection;
+    },
+
     setSort: (state, action: PayloadAction<{ by: SortKey; direction?: "asc" | "desc" }>) => {
       state.sortBy = action.payload.by;
       state.sortDirection = action.payload.direction ?? "asc";
@@ -166,6 +180,7 @@ export const {
   setActiveBoard,
   setFilters,
   clearFilters,
+  applyView,
   setSort,
   toggleSelection,
   selectMany,
