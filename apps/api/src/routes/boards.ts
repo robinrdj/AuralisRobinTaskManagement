@@ -5,7 +5,7 @@ import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import type { RealtimeMessage } from "@auralis/shared";
-import { boardMembers, boards, users } from "../db/schema.js";
+import { boardMembers, boards, taskDependencies, tasks, users } from "../db/schema.js";
 import { badRequest, conflict, forbidden, notFound } from "../lib/errors.js";
 import { requireAuth } from "../middleware/auth.js";
 import type { AppContext } from "../lib/context.js";
@@ -156,6 +156,25 @@ router.get("/:id/members", zValidator("param", idParamSchema), async (c) => {
       email: isGuest ? null : email,
     })),
   });
+});
+
+/**
+ * Every dependency edge on the board, for views that draw the whole graph at
+ * once. Both ends are always on the same board, so filtering by the blocked
+ * task is enough.
+ */
+router.get("/:id/dependencies", zValidator("param", idParamSchema), async (c) => {
+  const db = c.get("db");
+  const { id } = c.req.valid("param");
+  await requireMembership(db, id, c.get("user").id);
+
+  const edges = await db
+    .select({ blockerId: taskDependencies.blockerId, blockedId: taskDependencies.blockedId })
+    .from(taskDependencies)
+    .innerJoin(tasks, eq(tasks.id, taskDependencies.blockedId))
+    .where(eq(tasks.boardId, id));
+
+  return c.json({ dependencies: edges });
 });
 
 const inviteBodySchema = z.object({

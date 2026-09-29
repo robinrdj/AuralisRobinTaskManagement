@@ -23,6 +23,12 @@ const BoardPage = lazy(() =>
 const AnalyticsPage = lazy(() =>
   import("./pages/AnalyticsPage").then((module) => ({ default: module.AnalyticsPage }))
 );
+const CalendarPage = lazy(() =>
+  import("./schedule/CalendarPage").then((module) => ({ default: module.CalendarPage }))
+);
+const TimelinePage = lazy(() =>
+  import("./schedule/TimelinePage").then((module) => ({ default: module.TimelinePage }))
+);
 
 export default function AuthenticatedApp({
   user,
@@ -71,6 +77,22 @@ export default function AuthenticatedApp({
           element={
             <Suspense fallback={<RouteSpinner label="Loading analytics" />}>
               <AnalyticsPage boardId={boardId} />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <Suspense fallback={<RouteSpinner label="Loading calendar" />}>
+              <CalendarPage key={boardId} boardId={boardId} readOnly={readOnly} />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/timeline"
+          element={
+            <Suspense fallback={<RouteSpinner label="Loading timeline" />}>
+              <TimelinePage key={boardId} boardId={boardId} readOnly={readOnly} />
             </Suspense>
           }
         />

@@ -331,6 +331,15 @@ export const api = createApi({
       providesTags: (_r, _e, taskId) => [{ type: "Dependency", id: taskId }],
     }),
 
+    /** Every dependency edge on a board, for the timeline. */
+    getBoardDependencies: builder.query<{ blockerId: string; blockedId: string }[], string>({
+      query: (boardId) => `/boards/${boardId}/dependencies`,
+      transformResponse: (response: {
+        dependencies: { blockerId: string; blockedId: string }[];
+      }) => response.dependencies,
+      providesTags: [{ type: "Dependency", id: "BOARD" }],
+    }),
+
     addDependency: builder.mutation<void, { taskId: string; blockerId: string }>({
       query: ({ taskId, blockerId }) => ({
         url: `/tasks/${taskId}/dependencies`,
@@ -340,6 +349,7 @@ export const api = createApi({
       invalidatesTags: (_r, _e, arg) => [
         { type: "Dependency", id: arg.taskId },
         { type: "Dependency", id: arg.blockerId },
+        { type: "Dependency", id: "BOARD" },
       ],
     }),
 
@@ -351,6 +361,7 @@ export const api = createApi({
       invalidatesTags: (_r, _e, arg) => [
         { type: "Dependency", id: arg.taskId },
         { type: "Dependency", id: arg.blockerId },
+        { type: "Dependency", id: "BOARD" },
       ],
     }),
 
@@ -566,6 +577,7 @@ export const {
   useBulkCreateTasksMutation,
   useBulkDeleteTasksMutation,
   useGetTaskDependenciesQuery,
+  useGetBoardDependenciesQuery,
   useAddDependencyMutation,
   useRemoveDependencyMutation,
   useGetTaskActivityQuery,

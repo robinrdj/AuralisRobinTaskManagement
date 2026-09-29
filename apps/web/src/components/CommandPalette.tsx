@@ -130,6 +130,8 @@ export function CommandPalette({
                     Create a task
                   </Item>
                   <Item onSelect={() => run(() => navigate("/board"))}>Go to board</Item>
+                  <Item onSelect={() => run(() => navigate("/calendar"))}>Go to calendar</Item>
+                  <Item onSelect={() => run(() => navigate("/timeline"))}>Go to timeline</Item>
                   <Item onSelect={() => run(() => navigate("/analytics"))}>
                     Go to analytics
                   </Item>

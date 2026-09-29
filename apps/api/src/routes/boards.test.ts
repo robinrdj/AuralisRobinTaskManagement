@@ -348,3 +348,61 @@ describe("boards", () => {
     });
   });
 });
+
+describe("board dependencies", () => {
+  let harness: TestHarness;
+
+  beforeAll(async () => {
+    harness = await createHarness();
+  }, 60_000);
+
+  afterAll(async () => {
+    await harness?.close();
+  });
+
+  it("lists every edge on the board, and nothing from other boards", async () => {
+    const owner = await signUp(harness);
+    const other = await signUp(harness);
+
+    async function task(session: Session, title: string): Promise<string> {
+      const response = await harness.request("/api/tasks", {
+        method: "POST",
+        session,
+        body: JSON.stringify({ boardId: session.boardId, title }),
+      });
+      return ((await response.json()) as { task: { id: string } }).task.id;
+    }
+    async function link(session: Session, blocked: string, blocker: string) {
+      await harness.request(`/api/tasks/${blocked}/dependencies`, {
+        method: "POST",
+        session,
+        body: JSON.stringify({ blockerId: blocker }),
+      });
+    }
+
+    const design = await task(owner, "Design");
+    const build = await task(owner, "Build");
+    const ship = await task(owner, "Ship");
+    await link(owner, build, design);
+    await link(owner, ship, build);
+
+    const elsewhereA = await task(other, "Elsewhere A");
+    const elsewhereB = await task(other, "Elsewhere B");
+    await link(other, elsewhereB, elsewhereA);
+
+    const response = await harness.request(`/api/boards/${owner.boardId}/dependencies`, {
+      session: owner,
+    });
+    const { dependencies } = (await response.json()) as {
+      dependencies: { blockerId: string; blockedId: string }[];
+    };
+    expect(dependencies).toHaveLength(2);
+    expect(dependencies).toContainEqual({ blockerId: design, blockedId: build });
+    expect(dependencies).toContainEqual({ blockerId: build, blockedId: ship });
+
+    const forbidden = await harness.request(`/api/boards/${owner.boardId}/dependencies`, {
+      session: other,
+    });
+    expect(forbidden.status).toBe(403);
+  });
+});

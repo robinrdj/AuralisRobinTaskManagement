@@ -12,6 +12,8 @@ import { BoardSwitcher } from "./boards/BoardSwitcher";
 
 const NAV_ITEMS = [
   { to: "/board", label: "Board", tour: "nav-board" },
+  { to: "/calendar", label: "Calendar", tour: "nav-calendar" },
+  { to: "/timeline", label: "Timeline", tour: "nav-timeline" },
   { to: "/analytics", label: "Analytics", tour: "nav-analytics" },
 ];
 
