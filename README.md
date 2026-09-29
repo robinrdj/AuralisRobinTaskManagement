@@ -30,6 +30,14 @@ That's the whole setup. There is no database to install — see
 | **Analytics**                 | Status, priority, 14-day throughput and work-ageing, each with a table view. All derived from the board — there is no separate reporting store.         |
 | **Guided first run**          | Auri, a small ambient guide, watches the board and speaks only when it helps. Always dismissible.                                                       |
 | **Scales past the demo**      | Columns virtualise above 40 cards; ordering uses fractional indices so a drag writes one row.                                                           |
+| **Shared boards**             | Any number of boards. Invite existing accounts as editors or view-only members; viewers get a read-only board, and the server enforces every role.      |
+| **Comments and @mentions**    | A thread on every task. Mentions are stored by user id, so they survive duplicate names and renames, and reach only people on the board.                |
+| **Labels**                    | Per-board coloured labels on cards, in the filter bar and in search. Undoing a deletion puts a task's labels back.                                      |
+| **Recurring tasks**           | Daily, weekday, weekly or monthly. Completing one schedules the next; the 31st clamps to short months and returns afterwards.                           |
+| **Saved views**               | Named filters and sort, stored on the server, personal or shared with the board.                                                                        |
+| **Calendar and timeline**     | A month calendar you can drag tasks around, and a Gantt timeline that draws dependencies and flags any task due before something it waits on.           |
+| **Notifications**             | Assignments, mentions, invites, newly unblocked work and due-soon reminders, delivered live to whichever board you have open.                           |
+| **Time tracking**             | Estimates, a start/stop timer that follows you around the app, time logged by hand, and a report of estimates against actual.                           |
 
 ## Stack
 
@@ -162,7 +170,7 @@ Replay it any time with `?tour=reset`.
 
 ## Testing
 
-**335 tests.** 244 unit and integration, 91 end-to-end across desktop and mobile
+**522 tests.** 394 unit and integration, 128 end-to-end across desktop and mobile
 viewports.
 
 ```
@@ -260,8 +268,10 @@ every variable and what it does.
 - **Realtime is single-instance.** The hub fans out in-process, so horizontal
   scaling needs Postgres `LISTEN`/`NOTIFY` or Redis behind the same interface.
   It's deliberately narrow enough that this is a change to one file.
-- **One board per user.** The schema supports many, including membership roles;
-  the UI only surfaces the first.
-- **Recurring tasks and saved filter views** are not built. Filters live in
-  the URL-free UI state, so saving one is a small addition rather than a
-  redesign.
+- **Invites need an existing account.** There is no email delivery, so a
+  board can only be shared with someone who has already signed up.
+- **Undoing a task deletion restores its labels, but not its comments or
+  tracked time.** Those rows go with the task; bringing them back would mean
+  soft-deleting tasks rather than deleting them.
+- **Completing a recurring task and then undoing it** reopens the task but
+  leaves the next occurrence on the board.
