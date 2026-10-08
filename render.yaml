@@ -1,0 +1,32 @@
+# Render blueprint for the API. The web app stays on Vercel and proxies /api
+# here (see apps/web/vercel.json), so cookies remain first-party.
+#
+# Free instances sleep after 15 minutes without traffic; the first request
+# after that waits for a cold start.
+services:
+  - type: web
+    name: auralis-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      # Same-origin through the Vercel rewrite, so Lax cookies are enough.
+      - key: CROSS_SITE_COOKIES
+        value: "false"
+      - key: CORS_ORIGINS
+        value: https://auralis-robin-task-management.vercel.app
+      - key: GUEST_TTL_HOURS
+        value: "72"
+      - key: JWT_SECRET
+        generateValue: true
+      # Postgres connection string, e.g. from Neon's free tier. Set in the
+      # dashboard; it is never committed.
+      - key: DATABASE_URL
+        sync: false
