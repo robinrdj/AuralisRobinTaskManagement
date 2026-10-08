@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://auralisapi-production.up.railway.app/api/:path*"
+      "destination": "https://auralis-api-weqf.onrender.com/api/:path*"
     },
     {
       "source": "/((?!api/).*)",
